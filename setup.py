@@ -12,6 +12,8 @@ def read_file(filename):
         return ''
 
 
+requirements = [line for line in read_file('requirements/base.txt').split('\n')]
+
 setup(
     name='rapidsms-nutrition',
     version=__import__('nutrition').__version__,
@@ -19,6 +21,7 @@ setup(
     author_email='solutions@caktusgroup.com',
     packages=find_packages(),
     include_package_data=True,
+    install_requires=['distribute'] + requirements,
     url='https://github.com/caktus/rapidsms-nutrition/',
     license='BSD',
     description=u' '.join(__import__('nutrition').__doc__.splitlines()).strip(),
