@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import optparse
 import sys
 
 from django.conf import settings
@@ -24,10 +25,13 @@ from django.test.utils import get_runner
 
 
 def runtests():
+    parser = optparse.OptionParser()
+    _, tests = parser.parse_args()
+    tests = tests or ['nutrition']
+
     TestRunner = get_runner(settings)
     test_runner = TestRunner(verbosity=1, interactive=True, failfast=False)
-    failures = test_runner.run_tests(['nutrition', ])
-    sys.exit(failures)
+    sys.exit(test_runner.run_tests(tests))
 
 
 if __name__ == '__main__':
