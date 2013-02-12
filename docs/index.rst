@@ -13,6 +13,12 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   installation
+   registration
+   reports
+   views
+   releases
+
 Indices and tables
 ==================
 
