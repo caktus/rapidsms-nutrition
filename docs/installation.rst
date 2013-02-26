@@ -17,6 +17,7 @@ not already present) to :setting:`INSTALLED_APPS` in your RapidSMS project::
         ...
         'rapidsms',
         'rapidsms.contrib.handlers',
+        'healthcare',
         'nutrition'
     ]
 

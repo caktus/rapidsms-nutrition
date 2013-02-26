@@ -1,3 +1,4 @@
 Django==1.4
 rapidsms==0.11.0
 pygrowup==0.7.5b0
+rapidsms-healthcare
