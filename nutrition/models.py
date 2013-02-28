@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 import datetime
 from decimal import Decimal
-from pygrowup.exceptions import InvalidAge
+from pygrowup.exceptions import InvalidMeasurement
 from pygrowup.pygrowup import Calculator
 
 from django.db import models
@@ -17,9 +17,11 @@ HEALTHCARE_SOURCE = 'nutrition'
 class Report(models.Model):
     GOOD_STATUS = 'G'
     CANCELLED_STATUS = 'C'  # Health worker cancelled the report.
+    SUSPECT_STATUS = 'S'  # Measurements are beyond reasonable limits.
     STATUSES = (
         (GOOD_STATUS, 'Good'),
         (CANCELLED_STATUS, 'Cancelled'),
+        (SUSPECT_STATUS, 'Suspect'),
     )
 
     date = models.DateTimeField(auto_now_add=True)
@@ -79,23 +81,25 @@ class Report(models.Model):
 
         age = Decimal(str(self.age_in_months))
         sex = self.patient['sex']
-        if self.weight is not None:
-            try:
+
+        try:
+            if self.weight is not None:
                 self.weight4age = calculator.wfa(self.weight, age, sex)
-            except InvalidAge:
-                self.weight4age = None
-        if self.height is not None:
-            try:
+            if self.height is not None:
                 self.height4age = calculator.lhfa(self.height, age, sex)
-            except InvalidAge:
-                self.height4age = None
-        if self.weight is not None and self.height is not None:
-            if age <= 24:
-                self.weight4height = calculator.wfl(self.weight, age, sex,
-                        self.height)
-            else:
-                self.weight4height = calculator.wfh(self.weight, age, sex,
-                        self.height)
+            if self.weight is not None and self.height is not None:
+                if age <= 24:
+                    self.weight4height = calculator.wfl(self.weight, age, sex,
+                            self.height)
+                else:
+                    self.weight4height = calculator.wfh(self.weight, age, sex,
+                            self.height)
+        except InvalidMeasurement:
+            # This may be thrown by pygrowup when calculating z-scores if
+            # the measurements provided are beyond reasonable limits.
+            self.status = self.SUSPECT_STATUS
+            self.save()
+            raise
 
     def analyze(self):
         """This method should only be called after date is set."""
