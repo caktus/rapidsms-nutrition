@@ -27,14 +27,14 @@ As an example, the following conversation could occur::
 
     You:      NUTRITION REPORT
     RapidSMS: To create a nutrition report, send: NUTRITION REPORT
-              <patient_id> <weight (kg)> <height (cm)> <muac (cm)>
+              <patient_id> <weight in kg> <height in cm> <muac in cm>
               <oedema (Y/N)>
     You:      NUTRITION REPORT zyx-321 18.5 110 x N
     RapidSMS: Thanks Jordan Brown. Nutrition update for Sam Green (zyx-321):
-              weight=18.5kg
-              height=110 cm
-              muac=unknown
-              oedema=no
+              weight: 18.5 kg
+              height: 110 cm
+              muac: unknown
+              oedema: no
     You:      NUTRITION REPORT mno-456 15 90 18 Y
     RapidSMS: Please register mno-456 as a nutrition patient before making a
               report.
