@@ -23,24 +23,31 @@ class Report(models.Model):
     )
 
     date = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=1, choices=STATUSES, default=GOOD_STATUS)
+    status = models.CharField(max_length=1, choices=STATUSES,
+            default=GOOD_STATUS)
 
     healthworker_id = models.CharField(max_length=96, blank=True, null=True)
     patient_id = models.CharField(max_length=96)
 
     # Indicators, gathered from the health worker.
-    height = models.DecimalField(max_digits=4, decimal_places=1, blank=True, null=True)  # cm
-    weight = models.DecimalField(max_digits=4, decimal_places=1, blank=True, null=True)  # kg
-    muac = models.DecimalField(max_digits=4, decimal_places=1, blank=True, null=True)  # cm
+    height = models.DecimalField(max_digits=4, decimal_places=1, blank=True,
+            null=True)  # cm
+    weight = models.DecimalField(max_digits=4, decimal_places=1, blank=True,
+            null=True)  # kg
+    muac = models.DecimalField(max_digits=4, decimal_places=1, blank=True,
+            null=True)  # cm
     oedema = models.NullBooleanField(default=None)
 
     # Calculated but stored here for easy reference.
     age_in_months = models.IntegerField(blank=True, null=True)
 
     # Nutrition z-scores, calcuated from indicators.
-    weight4age = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
-    height4age = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
-    weight4height = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
+    weight4age = models.DecimalField(max_digits=4, decimal_places=2,
+            blank=True, null=True)
+    height4age = models.DecimalField(max_digits=4, decimal_places=2,
+            blank=True, null=True)
+    weight4height = models.DecimalField(max_digits=4, decimal_places=2,
+            blank=True, null=True)
 
     class Meta:
         permissions = (
@@ -84,9 +91,11 @@ class Report(models.Model):
                 self.height4age = None
         if self.weight is not None and self.height is not None:
             if age <= 24:
-                self.weight4height = calculator.wfl(self.weight, age, sex, self.height)
+                self.weight4height = calculator.wfl(self.weight, age, sex,
+                        self.height)
             else:
-                self.weight4height = calculator.wfh(self.weight, age, sex, self.height)
+                self.weight4height = calculator.wfh(self.weight, age, sex,
+                        self.height)
 
     def analyze(self):
         """This method should only be called after date is set."""
@@ -102,7 +111,8 @@ class Report(models.Model):
     @property
     def healthworker(self):
         if self.healthworker_id:
-            return client.providers.get(self.healthworker_id, source=HEALTHCARE_SOURCE)
+            return client.providers.get(self.healthworker_id,
+                    source=HEALTHCARE_SOURCE)
         return None
 
     @property
