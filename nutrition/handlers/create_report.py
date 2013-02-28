@@ -34,8 +34,13 @@ class CreateReportHandler(NutritionPrefixMixin, KeywordHandler):
         """Tokenize message text."""
         result = {}
         tokens = text.strip().split()
-        for i in range(len(tokens)):
-            result[self.token_names[i]] = tokens.pop(0)
+        for name in self.token_names:
+            try:
+                result[name] = tokens.pop(0)
+            except IndexError:
+                raise ValueError('Received too few tokens')
+        if tokens:
+            raise ValueError('Received too many tokens')
         return result
 
     @property
@@ -43,8 +48,8 @@ class CreateReportHandler(NutritionPrefixMixin, KeywordHandler):
         """Fill in success text with data about the created report."""
         data = self.report.indicators
         data['reporter'] = 'placeholder'  # TODO
-        data['patient'] = report.patient['name']
-        data['patient_id'] = report.patient_id
+        data['patient'] = self.report.patient['name']
+        data['patient_id'] = self.report.patient_id
         return self.success_text.format(**data)
 
     def handle(self, text):
@@ -53,20 +58,19 @@ class CreateReportHandler(NutritionPrefixMixin, KeywordHandler):
         self.connection = self.msg.connection
         self.debug('Received report message from {0}'.format(self.connection))
 
-        parsed = self._parse(text)
-        data = ', '.join([': '.join((k, v)) for k, v in parsed.iteritems()])
-        self.debug('Parsed report data: {0}'.format(data))
-
-        # Check for incorrect length early in order to provide a more helpful
-        # error message.
-        count = len(parsed)
-        correct = len(self.token_names)
-        if count != correct:
-            args = (count, correct)
-            self.debug('Incorrect number of tokens: {0}/{1}'.format(*args))
+        # Parse the message into its components.
+        try:
+            parsed = self._parse(text)
+        except ValueError as e:
+            # Incorrect number of tokens.
+            self.exception()
             self.respond(self.format_error_text + self._help_text)
             return
+        else:
+            data = ', '.join([': '.join((k, v)) for k, v in parsed.items()])
+            self.debug('Parsed report data: {0}'.format(data))
 
+        # Validate the components using a form.
         form = self._get_form(parsed)
         if not form.is_valid():
             data = {'message': form.error}
@@ -74,9 +78,10 @@ class CreateReportHandler(NutritionPrefixMixin, KeywordHandler):
             self.respond(self.form_error_text.format(**data))
             return
 
+        # Create the new report.
         try:
             self.report = form.save()
-            self.report.analyze()  # Calculate z-scores and re-save.
+            self.report.analyze()  # Calculates z-scores and re-saves.
         except InvalidMeasurement as e:
             # This may be thrown by pygrowup when calculating z-scores if
             # the measurements provided are beyond reasonable limits.
@@ -84,7 +89,7 @@ class CreateReportHandler(NutritionPrefixMixin, KeywordHandler):
             data = {'message': e.message}
             self.respond(self.invalid_measurement_text.format(**data))
             return
-
-        # Send a success message to the reporter.
-        self.debug('Successfully created a new report!')
-        self.respond(self._success_text)
+        else:
+            # Send a success message to the reporter.
+            self.debug('Successfully created a new report!')
+            self.respond(self._success_text)
