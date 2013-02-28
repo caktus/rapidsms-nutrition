@@ -22,13 +22,13 @@ class PlainErrorList(forms.util.ErrorList):
 
 class CreateReportForm(forms.ModelForm):
     """
-    Report form which can validate input from an SMS message. All fields
-    must be specified. To send a null or unknown value, send 'x' in its place.
+    Report form which can validate input from an SMS message. To send a null
+    or unknown value, send 'x' in its place.
     """
-    oedema = NullYesNoField()
-    weight = NullDecimalField(min_value=Decimal('0'))
-    height = NullDecimalField(min_value=Decimal('0'))
-    muac = NullDecimalField(min_value=Decimal('0'))
+    oedema = NullYesNoField(required=False)
+    weight = NullDecimalField(min_value=Decimal('0'), required=False)
+    height = NullDecimalField(min_value=Decimal('0'), required=False)
+    muac = NullDecimalField(min_value=Decimal('0'), required=False)
 
     class Meta:
         model = Report
