@@ -13,9 +13,15 @@ if not settings.configured:
                 'NAME': ':memory:',
             }
         },
+        HEALTHCARE_STORAGE_BACKEND='healthcare.backends.dummy.DummyStorage',
         INSTALLED_APPS=(
+            'rapidsms',
+            'rapidsms.contrib.handlers',
+            'healthcare',
+            'healthcare.backends.dummy',
             'nutrition',
         ),
+        PROJECT_NAME='Nutrition Test',
         SITE_ID=1,
         SECRET_KEY='this-is-just-for-tests-so-not-that-secret',
     )
