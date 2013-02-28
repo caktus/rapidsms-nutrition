@@ -24,6 +24,8 @@ class CreateReportHandler(NutritionPrefixMixin, KeywordHandler):
     format_error_text = 'Sorry, the system could not understand your report. '
     invalid_measurement_text = 'Sorry, one of your measurements is invalid: '\
             '{message}'
+    form_error_text = 'Sorry, an error occurred while processing your '\
+            'message: {message}'
 
     def _get_form(self, data):
         return self.form_class(data, connection=self.connection)
@@ -67,9 +69,9 @@ class CreateReportHandler(NutritionPrefixMixin, KeywordHandler):
 
         form = self._get_form(parsed)
         if not form.is_valid():
-            error = form.error
-            self.debug('Form error: {0}'.format(error))
-            self.respond(error)
+            data = {'message': form.error}
+            self.debug('Form error: {message}'.format(**data))
+            self.respond(self.form_error_text.format(**data))
             return
 
         try:

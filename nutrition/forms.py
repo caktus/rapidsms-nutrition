@@ -1,9 +1,13 @@
 from __future__ import unicode_literals
+from decimal import Decimal
 
 from django import forms
 from django.utils.encoding import force_unicode
 
-from nutrition.models import Report
+from healthcare.api import client
+from healthcare.exceptions import PatientDoesNotExist, ProviderDoesNotExist
+
+from nutrition.models import Report, HEALTHCARE_SOURCE
 from nutrition.fields import NullDecimalField, NullYesNoField
 
 
@@ -22,13 +26,13 @@ class CreateReportForm(forms.ModelForm):
     must be specified. To send a null or unknown value, send 'x' in its place.
     """
     oedema = NullYesNoField()
-    height = NullDecimalField(min_value=0)
-    weight = NullDecimalField(min_value=0)
-    muac = NullDecimalField(min_value=0)
+    weight = NullDecimalField(min_value=Decimal('0'))
+    height = NullDecimalField(min_value=Decimal('0'))
+    muac = NullDecimalField(min_value=Decimal('0'))
 
     class Meta:
         model = Report
-        fields = ('patient_id', 'height', 'weight', 'muac', 'oedema')
+        fields = ('patient_id', 'weight', 'height', 'muac', 'oedema')
 
     def __init__(self, *args, **kwargs):
         # The connection is used to retrieve the reporting health worker.
@@ -36,10 +40,14 @@ class CreateReportForm(forms.ModelForm):
 
         # Descriptive field error messages.
         self.messages = {
-            'oedema': 'Please send Y or N to indicate whether the patient has oedema.',
-            'height': 'Please send a positive decimal (in cm) for height.',
+            'patient_id': 'Nutrition reports must be for a patient who is '\
+                    'registered and active.',
             'weight': 'Please send a positive decimal (in kg) for weight.',
-            'muac': 'Please send a positive decimal (in cm) for mid-upper arm circumference.',
+            'height': 'Please send a positive decimal (in cm) for height.',
+            'muac': 'Please send a positive decimal (in cm) for mid-upper '\
+                    'arm circumference.',
+            'oedema': 'Please send Y or N to indicate whether the patient '\
+                    'has oedema.',
         }
         self.messages.update(kwargs.pop('messages', {}))
 
@@ -48,15 +56,24 @@ class CreateReportForm(forms.ModelForm):
         super(CreateReportForm, self).__init__(*args, **kwargs)
 
         for field in self.messages:
-            for msg_type in ('required', 'invalid', 'min_value'):
+            for msg_type in self.fields[field].error_messages:
                 self.fields[field].error_messages[msg_type] = self.messages[field]
 
     def clean_patient_id(self):
+        """Check that patient is registered and active."""
         val = self.cleaned_data['patient_id']
-        # TODO - Validate that patient is registered and active.
+        try:
+            patient = client.patients.get(val, source=HEALTHCARE_SOURCE)
+        except PatientDoesNotExist:
+            msg = self.fields['patient_id'].error_messages['invalid']
+            raise forms.ValidationError(msg)
+        if patient['status'] != 'A':
+            msg = self.fields['patient_id'].error_messages['invalid']
+            raise forms.ValidationError(msg)
         return val
 
     def clean(self):
+        """Check that healthcare worker is registered and active."""
         cleaned_data = super(CreateReportForm, self).clean()
         self.healthworker_id = 'placeholder'
         # TODO - Validate that connection is a registered and active healthworker.
