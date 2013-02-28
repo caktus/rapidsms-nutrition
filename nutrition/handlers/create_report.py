@@ -1,11 +1,10 @@
 from __future__ import unicode_literals
-
 from pygrowup.exceptions import InvalidMeasurement
 
 from rapidsms.contrib.handlers.handlers.keyword import KeywordHandler
 
-from nutrition.handlers.base import NutritionPrefixMixin
 from nutrition.forms import CreateReportForm
+from nutrition.handlers.base import NutritionPrefixMixin
 
 
 class CreateReportHandler(NutritionPrefixMixin, KeywordHandler):

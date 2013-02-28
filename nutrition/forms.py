@@ -55,9 +55,10 @@ class CreateReportForm(forms.ModelForm):
             kwargs['error_class'] = PlainErrorList
         super(CreateReportForm, self).__init__(*args, **kwargs)
 
-        for field in self.messages:
+        for field_name in self.messages:
             for msg_type in self.fields[field].error_messages:
-                self.fields[field].error_messages[msg_type] = self.messages[field]
+                field = self.fields[field_name]
+                field.error_messages[msg_type] = self.messages[field_name]
 
     def clean_patient_id(self):
         """Check that patient is registered and active."""
@@ -76,7 +77,8 @@ class CreateReportForm(forms.ModelForm):
         """Check that healthcare worker is registered and active."""
         cleaned_data = super(CreateReportForm, self).clean()
         self.healthworker_id = 'placeholder'
-        # TODO - Validate that connection is a registered and active healthworker.
+        # TODO - Validate that connection is a registered and active
+        # healthworker.
         return cleaned_data
 
     @property

@@ -1,5 +1,4 @@
 from __future__ import unicode_literals
-
 import datetime
 from decimal import Decimal
 from pygrowup.exceptions import InvalidMeasurement
