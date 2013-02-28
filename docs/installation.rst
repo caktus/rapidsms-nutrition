@@ -21,6 +21,10 @@ not already present) to :setting:`INSTALLED_APPS` in your RapidSMS project::
         'nutrition'
     ]
 
+You will need to `configure rapidsms-healthcare
+<http://rapidsms-healthcare.readthedocs.org/en/latest/quick-start.html#configuration>`_
+to use the storage backend of your choice.
+
 Since this application implements a registration process for
 :ref:`health workers <registration-health-workers>` and :ref:`child patients
 <registration-patients>`, you may want to disable
