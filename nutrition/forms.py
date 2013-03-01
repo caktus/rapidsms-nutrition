@@ -56,7 +56,7 @@ class CreateReportForm(forms.ModelForm):
         super(CreateReportForm, self).__init__(*args, **kwargs)
 
         for field_name in self.messages:
-            for msg_type in self.fields[field].error_messages:
+            for msg_type in self.fields[field_name].error_messages:
                 field = self.fields[field_name]
                 field.error_messages[msg_type] = self.messages[field_name]
 

@@ -36,7 +36,7 @@ class NullYesNoWidget(forms.widgets.NullBooleanSelect):
             self.true_values = true_values
         if false_values is not None:
             self.false_values = false_values
-        if nulL_values is not None:
+        if null_values is not None:
             self.null_values = null_values
 
     def value_from_datadict(self, data, files, name):
