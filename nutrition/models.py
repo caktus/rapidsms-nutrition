@@ -98,18 +98,22 @@ class Report(models.Model):
         except InvalidMeasurement:
             # This may be thrown by pygrowup when calculating z-scores if
             # the measurements provided are beyond reasonable limits.
-            self.status = self.SUSPECT_STATUS
-            self.save()
+            self.status = Report.SUSPECT_STATUS
+            try:
+                self.save(update_fields='status')
+            except TypeError:  # update_fields was introduced in Django 1.5.
+                Report.objects.filter(pk=self.pk).update(status=Report.SUSPECT_STATUS)
             raise
 
-    def analyze(self):
+    def analyze(self, save=True):
         """
         This method should only be called after created is set (after initial
         save).
         """
         self._set_age_in_months()
         self._set_zscores()
-        self.save()
+        if save:
+            self.save()
 
     def cancel(self, save=True):
         self.status = Report.CANCELLED_STATUS
