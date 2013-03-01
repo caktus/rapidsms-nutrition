@@ -20,6 +20,9 @@ class CreateReportHandler(NutritionPrefixMixin, KeywordHandler):
     success_text = 'Thanks {reporter}. Nutrition update for {patient} '\
             '({patient_id}):\nweight: {weight} kg\nheight: {height} cm\n'\
             'muac: {muac} cm\noedema: {oedema}'
+    error_text = 'Sorry, an unexpected error occurred while processing '\
+            'your report. Please contact your administrator if this '\
+            'continues to occur.'
     format_error_text = 'Sorry, the system could not understand your report. '
     invalid_measurement_text = 'Sorry, one of your measurements is invalid: '\
             '{message}'
@@ -85,8 +88,13 @@ class CreateReportHandler(NutritionPrefixMixin, KeywordHandler):
             # This may be thrown by pygrowup when calculating z-scores if
             # the measurements provided are beyond reasonable limits.
             self.exception()
-            data = {'message': e.message}
+            data = {'message': str(e)}
             self.respond(self.invalid_measurement_text.format(**data))
+            return
+        except Exception as e:
+            self.error('An unexpected error occurred')
+            self.exception()
+            self.respond(self.error_text)
             return
         else:
             # Send a success message to the reporter.

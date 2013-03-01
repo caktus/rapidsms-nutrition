@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 import datetime
+from decimal import Decimal
 import mock
 from pygrowup.exceptions import InvalidMeasurement
 
@@ -33,14 +34,14 @@ class CreateReportHandlerTest(RapidTest):
     def test_wrong_prefix(self):
         """Handler should not reply to an incorrect prefix."""
         replies = self._send('hello report asdf 10 50 10 Y')
-        self.assertEqual(replies, False)
         self.assertEqual(Report.objects.count(), 0)
+        self.assertEqual(replies, False)
 
     def test_wrong_keyword(self):
         """Handler should not reply to an incorrect keyword."""
         replies = self._send('nutrition hello asdf 10 50 10 Y')
-        self.assertEqual(replies, False)
         self.assertEqual(Report.objects.count(), 0)
+        self.assertEqual(replies, False)
 
     def test_help(self):
         """Prefix + keyword should return help text."""
@@ -86,8 +87,31 @@ class CreateReportHandlerTest(RapidTest):
         reply = replies[0]
         self.assertTrue(reply.startswith('Sorry, an error occurred while '\
                 'processing your message: '))
-        self.assertTrue('Please send a positive decimal (in kg) for '\
+        self.assertTrue('Please send a positive value (in kg) for '\
                 'weight.' in reply)
+
+    def test_large_weight(self):
+        replies = self._send('nutrition report asdf 10000 50 10 Y')
+        self.assertEqual(Report.objects.count(), 0)
+        self.assertEqual(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('Sorry, an error occurred while '\
+                'processing your message: '))
+        self.assertTrue('Nutrition report measurements ' in reply)
+
+    def test_specific_weight(self):
+        replies = self._send('nutrition report asdf 10.55 50 10 Y')
+        self.assertEqual(Report.objects.count(), 1)
+        report = Report.objects.get()
+        self.assertEqual(report.patient_id, 'asdf')
+        self.assertEqual(report.weight, Decimal('10.6'))
+        self.assertEqual(report.height, 50)
+        self.assertEqual(report.muac, 10)
+        self.assertTrue(report.oedema)
+        self.assertEqual(report.status, Report.GOOD_STATUS)
+        self.assertEqual(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('Thanks'))
 
     def test_null_weight(self):
         replies = self._send('nutrition report asdf x 50 10 Y')
@@ -101,6 +125,7 @@ class CreateReportHandlerTest(RapidTest):
         self.assertEqual(report.status, Report.GOOD_STATUS)
         self.assertEqual(len(replies), 1)
         reply = replies[0]
+        self.assertTrue(reply.startswith('Thanks'))
 
     def test_negative_height(self):
         replies = self._send('nutrition report asdf 10 -50 10 Y')
@@ -109,8 +134,31 @@ class CreateReportHandlerTest(RapidTest):
         reply = replies[0]
         self.assertTrue(reply.startswith('Sorry, an error occurred while '\
                 'processing your message: '))
-        self.assertTrue('Please send a positive decimal (in cm) for '\
+        self.assertTrue('Please send a positive value (in cm) for '\
                 'height.' in reply)
+
+    def test_large_height(self):
+        replies = self._send('nutrition report asdf 10 50000 10 Y')
+        self.assertEqual(Report.objects.count(), 0)
+        self.assertEqual(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('Sorry, an error occurred while '\
+                'processing your message: '))
+        self.assertTrue('Nutrition report measurements ' in reply)
+
+    def test_specific_height(self):
+        replies = self._send('nutrition report asdf 10 50.55 10 Y')
+        self.assertEqual(Report.objects.count(), 1)
+        report = Report.objects.get()
+        self.assertEqual(report.patient_id, 'asdf')
+        self.assertEqual(report.weight, 10)
+        self.assertEqual(report.height, Decimal('50.6'))
+        self.assertEqual(report.muac, 10)
+        self.assertTrue(report.oedema)
+        self.assertEqual(report.status, Report.GOOD_STATUS)
+        self.assertEqual(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('Thanks'))
 
     def test_null_height(self):
         replies = self._send('nutrition report asdf 10 x 10 Y')
@@ -150,8 +198,31 @@ class CreateReportHandlerTest(RapidTest):
         reply = replies[0]
         self.assertTrue(reply.startswith('Sorry, an error occurred while '\
                 'processing your message: '))
-        self.assertTrue('Please send a positive decimal (in cm) for '\
+        self.assertTrue('Please send a positive value (in cm) for '\
                 'mid-upper arm circumference.' in reply)
+
+    def test_large_muac(self):
+        replies = self._send('nutrition report asdf 10 50 10000 Y')
+        self.assertEqual(Report.objects.count(), 0)
+        self.assertEqual(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('Sorry, an error occurred while '\
+                'processing your message: '))
+        self.assertTrue('Nutrition report measurements ' in reply)
+
+    def test_specific_muac(self):
+        replies = self._send('nutrition report asdf 10 50 10.55 Y')
+        self.assertEqual(Report.objects.count(), 1)
+        report = Report.objects.get()
+        self.assertEqual(report.patient_id, 'asdf')
+        self.assertEqual(report.weight, 10)
+        self.assertEqual(report.height, 50)
+        self.assertEqual(report.muac, Decimal('10.6'))
+        self.assertTrue(report.oedema)
+        self.assertEqual(report.status, Report.GOOD_STATUS)
+        self.assertEqual(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('Thanks'))
 
     def test_null_muac(self):
         replies = self._send('nutrition report asdf 10 50 x Y')

@@ -26,9 +26,12 @@ class CreateReportForm(forms.ModelForm):
     or unknown value, send 'x' in its place.
     """
     oedema = NullYesNoField(required=False)
-    weight = NullDecimalField(min_value=Decimal('0'), required=False)
-    height = NullDecimalField(min_value=Decimal('0'), required=False)
-    muac = NullDecimalField(min_value=Decimal('0'), required=False)
+    weight = NullDecimalField(min_value=Decimal(0), max_digits=4,
+            required=False)
+    height = NullDecimalField(min_value=Decimal('0'), max_digits=4,
+            required=False)
+    muac = NullDecimalField(min_value=Decimal('0'), max_digits=4,
+            required=False)
 
     class Meta:
         model = Report
@@ -42,9 +45,9 @@ class CreateReportForm(forms.ModelForm):
         self.messages = {
             'patient_id': 'Nutrition reports must be for a patient who is '\
                     'registered and active.',
-            'weight': 'Please send a positive decimal (in kg) for weight.',
-            'height': 'Please send a positive decimal (in cm) for height.',
-            'muac': 'Please send a positive decimal (in cm) for mid-upper '\
+            'weight': 'Please send a positive value (in kg) for weight.',
+            'height': 'Please send a positive value (in cm) for height.',
+            'muac': 'Please send a positive value (in cm) for mid-upper '\
                     'arm circumference.',
             'oedema': 'Please send Y or N to indicate whether the patient '\
                     'has oedema.',
@@ -60,6 +63,20 @@ class CreateReportForm(forms.ModelForm):
                 field = self.fields[field_name]
                 field.error_messages[msg_type] = self.messages[field_name]
 
+        # Add more specific sizing messages.
+        for field_name in ('weight', 'height', 'muac'):
+            field = self.fields[field_name]
+            field.error_messages['max_digits'] = 'Nutrition report '\
+                    'measurements should be no more than %s digits in length.'
+
+    def clean(self):
+        """Check that healthcare worker is registered and active."""
+        cleaned_data = super(CreateReportForm, self).clean()
+        self.healthworker_id = 'placeholder'
+        # TODO - Validate that connection is a registered and active
+        # healthworker.
+        return cleaned_data
+
     def clean_patient_id(self):
         """Check that patient is registered and active."""
         val = self.cleaned_data['patient_id']
@@ -72,14 +89,6 @@ class CreateReportForm(forms.ModelForm):
             msg = self.fields['patient_id'].error_messages['invalid']
             raise forms.ValidationError(msg)
         return val
-
-    def clean(self):
-        """Check that healthcare worker is registered and active."""
-        cleaned_data = super(CreateReportForm, self).clean()
-        self.healthworker_id = 'placeholder'
-        # TODO - Validate that connection is a registered and active
-        # healthworker.
-        return cleaned_data
 
     @property
     def error(self):
