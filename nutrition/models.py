@@ -23,7 +23,8 @@ class Report(models.Model):
         (SUSPECT_STATUS, 'Suspect'),
     )
 
-    date = models.DateTimeField(auto_now_add=True)
+    created = models.DateTimeField(auto_now_add=True)
+    last_updated = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=1, choices=STATUSES,
             default=GOOD_STATUS)
 
@@ -57,17 +58,18 @@ class Report(models.Model):
         verbose_name = 'nutrition report'
 
     def __unicode__(self):
-        return 'Patient {0} on {1}'.format(self.patient_id, self.date.date())
+        return 'Patient {0} on {1}'.format(self.patient_id, self.created.date())
 
     def _set_age_in_months(self):
         """
         Set the patient's age in months, rounded to the nearest full month.
 
-        This method should only be called after date is set.
+        This method should only be called after created is set (after initial
+        save).
         """
         birth_date = self.patient['birth_date']
         if birth_date:
-            diff = self.date.date() - birth_date
+            diff = self.created.date() - birth_date
             self.age_in_months = int(diff.days / 30.475)
         else:
             self.age_in_months = None
@@ -101,7 +103,10 @@ class Report(models.Model):
             raise
 
     def analyze(self):
-        """This method should only be called after date is set."""
+        """
+        This method should only be called after created is set (after initial
+        save).
+        """
         self._set_age_in_months()
         self._set_zscores()
         self.save()
