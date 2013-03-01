@@ -52,6 +52,7 @@ class CreateReportHandlerTest(RapidTest):
         self.assertTrue(reply.startswith('To create a nutrition report, send'))
 
     def test_too_few_tokens(self):
+        """Report message requires prefix, keyword, and 5 arguments."""
         replies = self._send('nutrition report asdf 10 50 10')
         self.assertEqual(Report.objects.count(), 0)
         self.assertEqual(len(replies), 1)
@@ -60,6 +61,7 @@ class CreateReportHandlerTest(RapidTest):
                 'understand your report.'))
 
     def test_too_many_tokens(self):
+        """Report message requires prefix, keyword, and 5 arguments."""
         replies = self._send('nutrition report asdf 10 50 10 Y extra')
         self.assertEqual(Report.objects.count(), 0)
         self.assertEqual(len(replies), 1)
@@ -71,6 +73,7 @@ class CreateReportHandlerTest(RapidTest):
         pass  # TODO
 
     def test_unregistered_patient(self):
+        """Report patient must be registered."""
         replies = self._send('nutrition report fakeid 10 50 10 Y')
         self.assertEqual(Report.objects.count(), 0)
         self.assertEqual(len(replies), 1)
@@ -81,6 +84,7 @@ class CreateReportHandlerTest(RapidTest):
                 'who is registered and active.' in reply)
 
     def test_negative_weight(self):
+        """An error should be sent if reported weight is less than 0."""
         replies = self._send('nutrition report asdf -10 50 10 Y')
         self.assertEqual(Report.objects.count(), 0)
         self.assertEqual(len(replies), 1)
@@ -91,6 +95,7 @@ class CreateReportHandlerTest(RapidTest):
                 'weight.' in reply)
 
     def test_large_weight(self):
+        """An error should be sent if reported weight has >4 digits."""
         replies = self._send('nutrition report asdf 10000 50 10 Y')
         self.assertEqual(Report.objects.count(), 0)
         self.assertEqual(len(replies), 1)
@@ -100,6 +105,7 @@ class CreateReportHandlerTest(RapidTest):
         self.assertTrue('Nutrition report measurements ' in reply)
 
     def test_specific_weight(self):
+        """Reported weight should be rounded to 1 decimal place."""
         replies = self._send('nutrition report asdf 10.55 50 10 Y')
         self.assertEqual(Report.objects.count(), 1)
         report = Report.objects.get()
@@ -114,6 +120,7 @@ class CreateReportHandlerTest(RapidTest):
         self.assertTrue(reply.startswith('Thanks'))
 
     def test_null_weight(self):
+        """Weight should not be a required measurement."""
         replies = self._send('nutrition report asdf x 50 10 Y')
         self.assertEqual(Report.objects.count(), 1)
         report = Report.objects.get()
@@ -128,6 +135,7 @@ class CreateReportHandlerTest(RapidTest):
         self.assertTrue(reply.startswith('Thanks'))
 
     def test_negative_height(self):
+        """An error should be sent if reported height is less than 0."""
         replies = self._send('nutrition report asdf 10 -50 10 Y')
         self.assertEqual(Report.objects.count(), 0)
         self.assertEqual(len(replies), 1)
@@ -138,6 +146,7 @@ class CreateReportHandlerTest(RapidTest):
                 'height.' in reply)
 
     def test_large_height(self):
+        """An error should be sent if reported height has >4 digits."""
         replies = self._send('nutrition report asdf 10 50000 10 Y')
         self.assertEqual(Report.objects.count(), 0)
         self.assertEqual(len(replies), 1)
@@ -147,6 +156,7 @@ class CreateReportHandlerTest(RapidTest):
         self.assertTrue('Nutrition report measurements ' in reply)
 
     def test_specific_height(self):
+        """Reported height should be rounded to 1 decimal place."""
         replies = self._send('nutrition report asdf 10 50.55 10 Y')
         self.assertEqual(Report.objects.count(), 1)
         report = Report.objects.get()
@@ -161,6 +171,7 @@ class CreateReportHandlerTest(RapidTest):
         self.assertTrue(reply.startswith('Thanks'))
 
     def test_null_height(self):
+        """Height should not be a required measurement."""
         replies = self._send('nutrition report asdf 10 x 10 Y')
         self.assertEqual(Report.objects.count(), 1)
         report = Report.objects.get()
@@ -175,6 +186,7 @@ class CreateReportHandlerTest(RapidTest):
         self.assertTrue(reply.startswith('Thanks'))
 
     def test_invalid_measurement(self):
+        """An error should be sent if pygrowup deems a measurement invalid."""
         with mock.patch('pygrowup.pygrowup.Calculator.zscore_for_measurement') as method:
             method.side_effect = InvalidMeasurement
             replies = self._send('nutrition report asdf 10 50 10 Y')
@@ -192,6 +204,7 @@ class CreateReportHandlerTest(RapidTest):
                 'is invalid: '))
 
     def test_negative_muac(self):
+        """An error should be sent if reported muac is less than 0."""
         replies = self._send('nutrition report asdf 10 50 -10 Y')
         self.assertEqual(Report.objects.count(), 0)
         self.assertEqual(len(replies), 1)
@@ -202,6 +215,7 @@ class CreateReportHandlerTest(RapidTest):
                 'mid-upper arm circumference.' in reply)
 
     def test_large_muac(self):
+        """An error should be sent if reported muac has >4 digits."""
         replies = self._send('nutrition report asdf 10 50 10000 Y')
         self.assertEqual(Report.objects.count(), 0)
         self.assertEqual(len(replies), 1)
@@ -211,6 +225,7 @@ class CreateReportHandlerTest(RapidTest):
         self.assertTrue('Nutrition report measurements ' in reply)
 
     def test_specific_muac(self):
+        """Reported muac should be rounded to one decimal place."""
         replies = self._send('nutrition report asdf 10 50 10.55 Y')
         self.assertEqual(Report.objects.count(), 1)
         report = Report.objects.get()
@@ -225,6 +240,7 @@ class CreateReportHandlerTest(RapidTest):
         self.assertTrue(reply.startswith('Thanks'))
 
     def test_null_muac(self):
+        """Muac should not be a required measurement."""
         replies = self._send('nutrition report asdf 10 50 x Y')
         self.assertEqual(Report.objects.count(), 1)
         report = Report.objects.get()
@@ -239,6 +255,7 @@ class CreateReportHandlerTest(RapidTest):
         self.assertTrue(reply.startswith('Thanks'))
 
     def test_invalid_oedema(self):
+        """An error should be sent if reported oedema isn't Y/N."""
         replies = self._send('nutrition report asdf 10 50 10 invalid')
         self.assertEqual(Report.objects.count(), 0)
         self.assertEqual(len(replies), 1)
@@ -249,6 +266,7 @@ class CreateReportHandlerTest(RapidTest):
                 'has oedema.' in reply)
 
     def test_null_oedema(self):
+        """Oedema should not be a required measurement."""
         replies = self._send('nutrition report asdf 10 50 10 x')
         self.assertEqual(Report.objects.count(), 1)
         report = Report.objects.get()
