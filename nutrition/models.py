@@ -95,7 +95,7 @@ class Report(models.Model):
                 else:
                     self.weight4height = calculator.wfh(self.weight, age, sex,
                             self.height)
-        except InvalidMeasurement:
+        except InvalidMeasurement as e:
             # This may be thrown by pygrowup when calculating z-scores if
             # the measurements provided are beyond reasonable limits.
             self.status = Report.SUSPECT_STATUS
@@ -103,7 +103,7 @@ class Report(models.Model):
                 self.save(update_fields='status')
             except TypeError:  # update_fields was introduced in Django 1.5.
                 Report.objects.filter(pk=self.pk).update(status=Report.SUSPECT_STATUS)
-            raise
+            raise e
 
     def analyze(self, save=True):
         """
