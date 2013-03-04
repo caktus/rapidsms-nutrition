@@ -7,6 +7,7 @@ from pygrowup.pygrowup import Calculator
 from django.db import models
 
 from healthcare.api import client
+from healthcare.exceptions import PatientDoesNotExist, ProviderDoesNotExist
 
 
 # Used with rapidsms-healthcare.
@@ -14,34 +15,36 @@ HEALTHCARE_SOURCE = 'nutrition'
 
 
 class Report(models.Model):
-    GOOD_STATUS = 'G'
+    UNANALYZED_STATUS = 'U'  # The report has not yet been analyzed.
+    GOOD_STATUS = 'G'  # The report analysis ran correctly.
     CANCELLED_STATUS = 'C'  # Health worker cancelled the report.
     SUSPECT_STATUS = 'S'  # Measurements are beyond reasonable limits.
+    INCOMPLETE_STATUS = 'I'  # Patient birth date or sex are not set.
     STATUSES = (
+        (UNANALYZED_STATUS, 'Not Analyzed'),
         (GOOD_STATUS, 'Good'),
         (CANCELLED_STATUS, 'Cancelled'),
         (SUSPECT_STATUS, 'Suspect'),
+        (INCOMPLETE_STATUS, 'Incomplete'),
     )
 
-    created = models.DateTimeField(auto_now_add=True)
+    created = models.DateTimeField(auto_now_add=True,
+            verbose_name='report date')
     last_updated = models.DateTimeField(auto_now=True)
-    status = models.CharField(max_length=1, choices=STATUSES,
-            default=GOOD_STATUS)
+    status = models.CharField(max_length=1, blank=True, null=True,
+            choices=STATUSES, default=UNANALYZED_STATUS)
 
     healthworker_id = models.CharField(max_length=96, blank=True, null=True)
     patient_id = models.CharField(max_length=96)
 
     # Indicators, gathered from the health worker.
     height = models.DecimalField(max_digits=4, decimal_places=1, blank=True,
-            null=True)  # cm
+            null=True, verbose_name='Height (CM)')
     weight = models.DecimalField(max_digits=4, decimal_places=1, blank=True,
-            null=True)  # kg
+            null=True, verbose_name='Weight (KG)')
     muac = models.DecimalField(max_digits=4, decimal_places=1, blank=True,
-            null=True)  # cm
+            null=True, verbose_name='MUAC (CM)')
     oedema = models.NullBooleanField(default=None)
-
-    # Calculated but stored here for easy reference.
-    age_in_months = models.IntegerField(blank=True, null=True)
 
     # Nutrition z-scores, calcuated from indicators.
     weight4age = models.DecimalField(max_digits=4, decimal_places=2,
@@ -60,72 +63,79 @@ class Report(models.Model):
     def __unicode__(self):
         return 'Patient {0} on {1}'.format(self.patient_id, self.created.date())
 
-    def _set_age_in_months(self):
+    @property
+    def age(self):
         """
-        Set the patient's age in months, rounded to the nearest full month.
-
-        This method should only be called after created is set (after initial
-        save).
+        Returns the patient's age at the time of this report, rounded down to
+        the nearest full month.
         """
-        birth_date = self.patient['birth_date']
+        patient = self.patient
+        birth_date = patient.get('birth_date', None) if patient else None
         if birth_date:
             diff = self.created.date() - birth_date
-            self.age_in_months = int(diff.days / 30.475)
-        else:
-            self.age_in_months = None
+            return int(diff.days / 30.475)
 
-    def _set_zscores(self, calculator=None):
+    def analyze(self, save=True, calculator=None):
+        """
+        """
         calculator = calculator or Calculator(False, False, False)
 
-        if self.age_in_months is None:
-            return
-
-        age = Decimal(str(self.age_in_months))
-        sex = self.patient['sex']
+        # If the patient's birth_date or sex is not present, pygrowup
+        # cannot analyze the measurements.
+        if self.age is None or self.sex is None:
+            self.weight4age = None
+            self.height4age = None
+            self.weight4height = None
+            self.status = Report.INCOMPLETE_STATUS
+            if save:
+                self.save()
+            return self
 
         try:
             if self.weight is not None:
-                self.weight4age = calculator.wfa(self.weight, age, sex)
+                self.weight4age = calculator.wfa(self.weight, self.age,
+                        self.sex)
             if self.height is not None:
-                self.height4age = calculator.lhfa(self.height, age, sex)
+                self.height4age = calculator.lhfa(self.height, self.age,
+                        self.sex)
             if self.weight is not None and self.height is not None:
-                if age <= 24:
-                    self.weight4height = calculator.wfl(self.weight, age, sex,
-                            self.height)
+                if self.age <= 24:
+                    self.weight4height = calculator.wfl(self.weight, self.age,
+                            self.sex, self.height)
                 else:
-                    self.weight4height = calculator.wfh(self.weight, age, sex,
-                            self.height)
+                    self.weight4height = calculator.wfh(self.weight, self.age,
+                            self.sex, self.height)
         except InvalidMeasurement as e:
             # This may be thrown by pygrowup when calculating z-scores if
             # the measurements provided are beyond reasonable limits.
+            self.weight4age = None
+            self.height4age = None
+            self.weight4height = None
             self.status = Report.SUSPECT_STATUS
-            try:
-                self.save(update_fields='status')
-            except TypeError:  # update_fields was introduced in Django 1.5.
-                Report.objects.filter(pk=self.pk).update(status=Report.SUSPECT_STATUS)
+            if save:
+                self.save()
             raise e
 
-    def analyze(self, save=True):
-        """
-        This method should only be called after created is set (after initial
-        save).
-        """
-        self._set_age_in_months()
-        self._set_zscores()
+        self.status = Report.GOOD_STATUS
         if save:
             self.save()
+        return self
 
     def cancel(self, save=True):
         self.status = Report.CANCELLED_STATUS
         if save:
             self.save()
 
+    def get_oedema_display(self):
+        if self.oedema is None:
+            return 'Unknown'
+        return 'Yes' if self.oedema else 'No'
+
     @property
     def healthworker(self):
-        if self.healthworker_id:
-            return client.providers.get(self.healthworker_id,
-                    source=HEALTHCARE_SOURCE)
-        return None
+        if getattr(self, '_healthworker', None) is None:
+            self._healthworker = None  # TODO - integrate with rapidsms_healthcare app
+        return self._healthworker
 
     @property
     def indicators(self):
@@ -133,13 +143,26 @@ class Report(models.Model):
             'height': self.height,
             'weight': self.weight,
             'muac': self.muac,
-            'oedema': self.oedema,
+            'oedema': self.get_oedema_display(),
         }
 
     @property
     def patient(self):
-        return client.patients.get(self.patient_id, source=HEALTHCARE_SOURCE)
+        if getattr(self, '_patient', None) is None:
+            try:
+                self._patient = client.patients.get(self.patient_id,
+                        source=HEALTHCARE_SOURCE)
+            except PatientDoesNotExist:
+                # If a caller requires that the patient record exist, then it
+                # should ensure that patient is not None.
+                self._patient = None
+        return self._patient
 
+    @property
+    def sex(self):
+        """Returns the patient's sex."""
+        patient = self.patient
+        return patient.get('sex', None) if patient else None
 
     @property
     def zscores(self):
