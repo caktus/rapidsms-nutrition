@@ -15,6 +15,8 @@ if not settings.configured:
         },
         HEALTHCARE_STORAGE_BACKEND='healthcare.backends.dummy.DummyStorage',
         INSTALLED_APPS=(
+            'django.contrib.auth',
+            'django.contrib.contenttypes',
             'rapidsms',
             'rapidsms.contrib.handlers',
             'healthcare',
