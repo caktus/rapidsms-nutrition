@@ -16,6 +16,7 @@ not already present) to :setting:`INSTALLED_APPS` in your RapidSMS project::
     INSTALLED_APPS = [
         'django.contrib.auth',
         'django.contrib.contenttypes',
+        'django.contrib.sessions',
         'rapidsms',
         'rapidsms.contrib.handlers',
         'django_tables2',

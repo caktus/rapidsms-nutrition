@@ -22,7 +22,8 @@ class CreateReportHandlerTest(NutritionTestBase):
 
     def setUp(self):
         self.patient_id = 'asdf'
-        self.patient = self.create_patient(self.patient_id)
+        self.patient_id, self.source, self.patient = self.create_patient(
+                self.patient_id)
 
     def _send(self, text):
         return self.Handler.test(text)
