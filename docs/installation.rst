@@ -13,15 +13,14 @@ additional programs listed in the `requirements` directory.
 After installing, you should add ``'nutrition'`` and its requirements (if
 not already present) to :setting:`INSTALLED_APPS` in your RapidSMS project::
 
-    INSTALLED_APPS [
-        ...
+    INSTALLED_APPS = [
         'django.contrib.auth',
         'django.contrib.contenttypes',
         'rapidsms',
         'rapidsms.contrib.handlers',
         'django_tables2',
         'healthcare',
-        'nutrition'
+        'nutrition',
     ]
 
 You will need to `configure rapidsms-healthcare
@@ -29,10 +28,3 @@ You will need to `configure rapidsms-healthcare
 to use the storage backend of your choice, and ensure that
 ``'django.core.context_processors.request'`` is in
 :setting:`TEMPLATE_CONTEXT_PROCESSORS` as required by `django_tables2`.
-
-Since this application implements a registration process for
-:ref:`health workers <registration-health-workers>` and :ref:`child patients
-<registration-patients>`, you may want to disable
-`rapidsms.contrib.registration
-<http://rapidsms.readthedocs.org/en/latest/topics/contrib/registration.html>`_
-by removing it from your :setting:`INSTALLED_APPS`.
