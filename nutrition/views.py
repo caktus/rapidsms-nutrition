@@ -1,8 +1,13 @@
 from __future__ import unicode_literals
 import csv
 import re
+from urllib import urlencode
 
+from django.conf import settings
+from django.contrib.auth.views import redirect_to_login
+from django.core.urlresolvers import resolve
 from django.http import HttpResponse
+from django.shortcuts import redirect
 from django.views.generic import View
 from django.views.generic.base import TemplateView
 
@@ -12,29 +17,56 @@ from nutrition.tables import NutritionReportTable
 
 class NutritionReportMixin(object):
     """Allow filtering by patient and healthworker."""
+    # Required permissions, in the format app_label.codename.
+    permissions = ['nutrition.view_report']
 
-    @property
-    def patient_id(self):
-        return self.request.GET.get('patient_id', None)
+    # Default order by which reports should be displayed.
+    ordering = ['-created']
+
+    def dispatch(self, request, *args, **kwargs):
+        """
+        If user does not have the required permissions, redirect them to the
+        login page.
+        """
+        user = request.user
+        if not (user and user.has_perms(self.permissions)):
+            data = urlencode({'next': request.get_full_path()})
+            url = '{0}?{1}'.format(self.login_url, data)
+            return redirect(url)
+        return super(NutritionReportMixin, self).dispatch(request, *args,
+                **kwargs)
+
+    def get_filters(self):
+        filters = {}
+        if self.patient_id:
+            filters['patient_id'] = self.patient_id
+        if self.healthworker_id:
+            filters['healthworker_id'] = self.healthworker_id
+        if self.status:
+            filters['status'] = self.status
+        return filters
+
+    def get_reports(self, filters=None, ordering=None):
+        """Returns filtered reports list."""
+        filters = self.get_filters() if filters is None else filters
+        ordering = self.ordering if ordering is None else ordering
+        return Report.objects.filter(**filters).order_by(*ordering)
 
     @property
     def healthworker_id(self):
         return self.request.GET.get('healthworker_id', None)
 
     @property
+    def login_url(self):
+        return settings.LOGIN_URL
+
+    @property
+    def patient_id(self):
+        return self.request.GET.get('patient_id', None)
+
+    @property
     def status(self):
         return self.request.GET.get('status', None)
-
-    def get_reports(self):
-        """Returns Reports filtered by patient and healthworker."""
-        reports = Report.objects.all()
-        if self.patient_id:
-            reports = reports.filter(patient_id=self.patient_id)
-        if self.healthworker_id:
-            reports = reports.filter(healthworker_id=self.healthworker_id)
-        if self.status:
-            reports = reports.filter(status=status)
-        return reports.order_by('-created')
 
 
 class NutritionReportList(NutritionReportMixin, TemplateView):
@@ -48,14 +80,13 @@ class NutritionReportList(NutritionReportMixin, TemplateView):
         return self.request.GET.get('page', 1)
 
     def get_context_data(self, *args, **kwargs):
-        reports = self.get_reports()
+        filters = self.get_filters()
+        reports = self.get_reports(filters)
         reports_table = NutritionReportTable(reports,
                 template=self.table_template_name)
         reports_table.paginate(page=self.page, per_page=self.reports_per_page)
         return {
-            'healthworker_id': self.healthworker_id,
-            'patient_id': self.patient_id,
-            'status': self.status,
+            'filters': filters,
             'reports_table': reports_table,
         }
 
@@ -105,6 +136,8 @@ class CSVNutritionReportList(NutritionReportMixin, View):
     def render_patient(self, report):
         patient = report.patient
         if patient:
-            return '{0} ({1})'.format(patient.get('name', ''),
-                    report.patient_id)
-        return ''
+            name = patient.get('name', '')
+            if name:
+                return '{0} ({1})'.format(name, report.patient_id)
+            return report.patient_id
+        return None

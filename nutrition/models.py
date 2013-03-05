@@ -56,7 +56,7 @@ class Report(models.Model):
 
     class Meta:
         permissions = (
-            ('can_view', 'Can View Nutrition Reports'),
+            ('view_report', 'Can View Nutrition Reports'),
         )
         verbose_name = 'nutrition report'
 
@@ -76,8 +76,7 @@ class Report(models.Model):
             return int(diff.days / 30.475)
 
     def analyze(self, save=True, calculator=None):
-        """
-        """
+        """Uses a pygrowup to calculate z-scores from height and weight."""
         calculator = calculator or Calculator(False, False, False)
 
         # If the patient's birth_date or sex is not present, pygrowup

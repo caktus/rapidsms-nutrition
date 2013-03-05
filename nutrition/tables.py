@@ -22,7 +22,7 @@ class NutritionReportTable(tables.Table):
                 'age', 'height', 'weight', 'muac', 'oedema',
                 'weight4age', 'height4age', 'weight4height', 'status')
 
-    def _create_filter_link(self, **kwargs):
+    def _build_filter_link(self, **kwargs):
         """Returns a link to the reports page filtered by kwargs."""
         base = reverse('nutrition_reports')
         get_params = urlencode(kwargs)
@@ -34,7 +34,7 @@ class NutritionReportTable(tables.Table):
     def render_healthworker_id(self, value, record):
         """Link to a filtered reports page showing only this healthworker."""
         data = {
-            'link': self._create_filter_link(healthworker_id=value),
+            'link': self._build_filter_link(healthworker_id=value),
             'name': 'todo',  # TODO
             'id': value,
         }
@@ -46,7 +46,7 @@ class NutritionReportTable(tables.Table):
     def render_patient_id(self, value, record):
         """Link to a filtered reports page showing only this patient."""
         data = {
-            'link': self._create_filter_link(patient_id=value),
+            'link': self._build_filter_link(patient_id=value),
             'name': record.patient['name'],
             'id': value,
         }
@@ -55,7 +55,7 @@ class NutritionReportTable(tables.Table):
     def render_status(self, value, record):
         """Link to a filtered reports page showing only this status."""
         data = {
-            'link': self._create_filter_link(status=record.status),
+            'link': self._build_filter_link(status=record.status),
             'text': value,
         }
         return mark_safe('<a href="{link}">{text}</a>'.format(**data))
