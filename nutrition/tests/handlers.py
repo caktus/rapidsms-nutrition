@@ -21,6 +21,7 @@ class CreateReportHandlerTest(NutritionTestBase):
     Handler = CreateReportHandler
 
     def setUp(self):
+        super(CreateReportHandlerTest, self).setUp()
         self.patient_id = 'asdf'
         self.patient_id, self.source, self.patient = self.create_patient(
                 self.patient_id)
@@ -68,6 +69,9 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(Report.objects.count(), 0)
 
     def test_unregistered_healthworker(self):
+        pass  # TODO
+
+    def test_inactive_healthworker(self):
         pass  # TODO
 
     def test_unregistered_patient(self):
@@ -118,6 +122,18 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(report.muac, 10)
         self.assertTrue(report.oedema)
         self.assertEqual(report.status, Report.INCOMPLETE_STATUS)
+
+    def test_inactive_patient(self):
+        """Report patient must be active."""
+        client.patients.update(self.patient['id'], status='I')
+        replies = self._send('nutrition report asdf 10 50 10 Y')
+        self.assertEqual(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('Sorry, an error occurred while '\
+                'processing your message: '), reply)
+        self.assertTrue('Nutrition reports must be for a patient '\
+                'who is registered and active.' in reply)
+        self.assertEqual(Report.objects.count(), 0)
 
     def test_negative_weight(self):
         """An error should be sent if reported weight is less than 0."""

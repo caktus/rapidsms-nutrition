@@ -12,6 +12,14 @@ from ..models import Report, HEALTHCARE_SOURCE
 
 class NutritionTestBase(RapidTest):
 
+    def setUp(self):
+        # Before doing anything else, we must clear out the dummy backend.
+        for registry in (client.patients, client.providers):
+            registry.backend._patients = {}
+            registry.backend._patient_ids = {}
+            registry.backend._providers = {}
+        return super(NutritionTestBase, self).setUp()
+
     def create_patient(self, patient_id=None, source=None, **kwargs):
         defaults = {
             'name': self.random_string(25),
