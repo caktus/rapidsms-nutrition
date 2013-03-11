@@ -45,9 +45,10 @@ class NutritionReportTable(tables.Table):
 
     def render_patient_id(self, value, record):
         """Link to a filtered reports page showing only this patient."""
+        patient = record.patient
         data = {
             'link': self._build_filter_link(patient_id=value),
-            'name': record.patient['name'],
+            'name': patient['name'] if patient else None,
             'id': value,
         }
         return mark_safe('<a href="{link}">{name} ({id})</a>'.format(**data))

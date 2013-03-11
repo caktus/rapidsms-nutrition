@@ -101,6 +101,7 @@ class CSVNutritionReportList(NutritionReportMixin, View):
 
     @property
     def column_titles(self):
+        """Substitute non-alphanumeric characters with whitespace."""
         p = re.compile('[^a-zA-Z0-9]')
         return [p.sub(' ', attr).title() for attr in self.attrs]
 
@@ -131,9 +132,11 @@ class CSVNutritionReportList(NutritionReportMixin, View):
         return rows
 
     def render_healthworker(self, report):
+        """Custom rendering of healthworker data."""
         return 'placeholder'  # TODO
 
     def render_patient(self, report):
+        """Custom rendering of patient data."""
         patient = report.patient
         if patient:
             name = patient.get('name', '')
