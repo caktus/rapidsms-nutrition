@@ -16,7 +16,7 @@ HEALTHCARE_SOURCE = 'nutrition'
 
 class Report(models.Model):
     UNANALYZED_STATUS = 'U'  # The report has not yet been analyzed.
-    GOOD_STATUS = 'G'  # The report analysis ran correctly.
+    GOOD_STATUS = 'G'  # The report analysis ran completely.
     CANCELLED_STATUS = 'C'  # Health worker cancelled the report.
     SUSPECT_STATUS = 'S'  # Measurements are beyond reasonable limits.
     INCOMPLETE_STATUS = 'I'  # Patient birth date or sex are not set.

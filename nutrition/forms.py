@@ -26,7 +26,7 @@ class CreateReportForm(forms.ModelForm):
     or unknown value, send 'x' in its place.
     """
     oedema = NullYesNoField(required=False)
-    weight = NullDecimalField(min_value=Decimal(0), max_digits=4,
+    weight = NullDecimalField(min_value=Decimal('0'), max_digits=4,
             required=False)
     height = NullDecimalField(min_value=Decimal('0'), max_digits=4,
             required=False)
