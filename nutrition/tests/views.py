@@ -22,6 +22,7 @@ class NutritionViewTest(NutritionTestBase):
     get_kwargs = {}
 
     def setUp(self):
+        super(NutritionViewTest, self).setUp()
         self.username = 'testuser'
         self.password = 'password'
         self.permissions = self.get_permissions()
