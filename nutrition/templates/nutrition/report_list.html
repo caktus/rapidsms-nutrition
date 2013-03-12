@@ -10,12 +10,13 @@
 {% block content %}
     <div class="span12">
         <div class="page-header"><h1>Nutrition Reports</h1></div>
+        <p>Showing reports {{ reports_table.page.start_index }} - {{ reports_table.page.end_index }} of {{ reports_table.data.queryset.count }}.</p>
         <div style="margin-bottom:20px;">
             {% url 'csv_nutrition_reports' as csv %}
             {% if request.GET %}
                 <a href="{{ csv }}?{{ request.GET.urlencode }}" class="btn btn-primary">Export Selected Reports</a>
             {% else %}
-                <a href="{{ csv }}" class="btn btn-primary">Export Selected Reports</a>
+                <a href="{{ csv }}" class="btn btn-primary">Export Selected Reports to CSV</a>
             {% endif %}
         </div>
         {% render_table reports_table %}
