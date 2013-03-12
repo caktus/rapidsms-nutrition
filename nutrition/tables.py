@@ -12,13 +12,13 @@ from nutrition.models import Report
 class NutritionReportTable(tables.Table):
     # Override lots of columns to create better column labels.
     age = tables.Column(verbose_name='Age (Months)')
-    healthworker_id = tables.Column(verbose_name='Reporter')
+    reporter_id = tables.Column(verbose_name='Reporter')
     patient_id = tables.Column(verbose_name='Patient')
 
     class Meta:
         model = Report
         exclude = ('last_updated',)
-        sequence = ('id', 'created', 'healthworker_id', 'patient_id',
+        sequence = ('id', 'created', 'reporter_id', 'patient_id',
                 'age', 'height', 'weight', 'muac', 'oedema',
                 'weight4age', 'height4age', 'weight4height', 'status')
 
@@ -31,10 +31,10 @@ class NutritionReportTable(tables.Table):
     def render_created(self, value):
         return value.date()
 
-    def render_healthworker_id(self, value, record):
-        """Link to a filtered reports page showing only this healthworker."""
+    def render_reporter_id(self, value, record):
+        """Link to a filtered reports page showing only this reporter."""
         data = {
-            'link': self._build_filter_link(healthworker_id=value),
+            'link': self._build_filter_link(reporter_id=value),
             'name': 'todo',  # TODO
             'id': value,
         }

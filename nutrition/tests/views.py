@@ -105,9 +105,9 @@ class NutritionReportListViewTest(NutritionViewTest):
         page = response.context['reports_table'].page
         self.assertEqual(page.object_list.data.count(), 1)
 
-    def test_filter_healthworker(self):
-        """Reports should be filtered by healthworker."""
-        params = {'healthworker_id': 'hello'}
+    def test_filter_reporter(self):
+        """Reports should be filtered by reporter."""
+        params = {'reporter_id': 'hello'}
         report = self.create_report(**params)
         other = self.create_report()
         response = self._get(get_kwargs=params)
@@ -182,9 +182,9 @@ class NutritionReportExportViewTest(NutritionViewTest):
         response = self._get()
         self._check_report(response, report)
 
-    def test_filter_healthworker(self):
-        """Reports export should be filtered by healthworker."""
-        params = {'healthworker_id': 'hello'}
+    def test_filter_reporter(self):
+        """Reports export should be filtered by reporter."""
+        params = {'reporter_id': 'hello'}
         report = self.create_report(**params)
         other = self.create_report()
         response = self._get(get_kwargs=params)

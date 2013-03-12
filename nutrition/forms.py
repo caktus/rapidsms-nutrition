@@ -38,7 +38,7 @@ class CreateReportForm(forms.ModelForm):
         fields = ('patient_id', 'weight', 'height', 'muac', 'oedema')
 
     def __init__(self, *args, **kwargs):
-        # The connection is used to retrieve the reporting health worker.
+        # The connection is used to retrieve the reporter.
         self.connection = kwargs.pop('connection')
 
         # Descriptive field error messages.
@@ -72,9 +72,9 @@ class CreateReportForm(forms.ModelForm):
     def clean(self):
         """Check that healthcare worker is registered and active."""
         cleaned_data = super(CreateReportForm, self).clean()
-        self.healthworker_id = 'placeholder'
+        self.reporter_id = 'placeholder'
         # TODO - Validate that connection is a registered and active
-        # healthworker.
+        # reporter.
         return cleaned_data
 
     def clean_patient_id(self):
@@ -102,6 +102,6 @@ class CreateReportForm(forms.ModelForm):
         return None
 
     def save(self, commit=True):
-        self.instance.healthworker_id = self.healthworker_id
+        self.instance.reporter_id = self.reporter_id
         return super(CreateReportForm, self).save(commit=commit)
 

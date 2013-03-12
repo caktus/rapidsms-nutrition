@@ -13,7 +13,7 @@ from nutrition.tables import NutritionReportTable
 
 
 class NutritionReportMixin(object):
-    """Allow filtering by patient, healthworker, and status."""
+    """Allow filtering by patient, reporter, and status."""
     # Default order by which reports should be displayed.
     ordering = ['-created']
 
@@ -26,8 +26,8 @@ class NutritionReportMixin(object):
         filters = {}
         if self.patient_id:
             filters['patient_id'] = self.patient_id
-        if self.healthworker_id:
-            filters['healthworker_id'] = self.healthworker_id
+        if self.reporter_id:
+            filters['reporter_id'] = self.reporter_id
         if self.status:
             filters['status'] = self.status
         return filters
@@ -39,8 +39,8 @@ class NutritionReportMixin(object):
         return Report.objects.filter(**filters).order_by(*ordering)
 
     @property
-    def healthworker_id(self):
-        return self.request.GET.get('healthworker_id', None)
+    def reporter_id(self):
+        return self.request.GET.get('reporter_id', None)
 
     @property
     def patient_id(self):
@@ -76,7 +76,7 @@ class NutritionReportList(NutritionReportMixin, TemplateView):
 class CSVNutritionReportList(NutritionReportMixin, View):
     """Export filtered reports to a CSV file."""
     # Fields to include in the csv, in order.
-    attrs = ('id', 'created', 'last_updated', 'healthworker', 'patient',
+    attrs = ('id', 'created', 'last_updated', 'reporter', 'patient',
             'age', 'sex', 'height', 'weight', 'muac', 'oedema',
             'weight4age', 'height4age', 'weight4height', 'status')
     filename = 'nutrition_reports'
@@ -113,8 +113,8 @@ class CSVNutritionReportList(NutritionReportMixin, View):
             rows.append(row)
         return rows
 
-    def render_healthworker(self, report):
-        """Custom rendering of healthworker data."""
+    def render_reporter(self, report):
+        """Custom rendering of reporter data."""
         return 'placeholder'  # TODO
 
     def render_patient(self, report):

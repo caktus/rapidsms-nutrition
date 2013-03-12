@@ -10,5 +10,5 @@ created, with the most recent reports first. By clicking on a column header,
 you can reorder the data by that column. By clicking a column a second time,
 the data will be ordered by that column in reverse.
 
-**Filtering.** Reports may be filtered by healthworker, patient, or status. To
+**Filtering.** Reports may be filtered by reporter, patient, or status. To
 apply filtering, click on the value that you

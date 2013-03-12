@@ -17,7 +17,7 @@ HEALTHCARE_SOURCE = 'nutrition'
 class Report(models.Model):
     UNANALYZED_STATUS = 'U'  # The report has not yet been analyzed.
     GOOD_STATUS = 'G'  # The report analysis ran completely.
-    CANCELLED_STATUS = 'C'  # Health worker cancelled the report.
+    CANCELLED_STATUS = 'C'  # Reporter cancelled the report.
     SUSPECT_STATUS = 'S'  # Measurements are beyond reasonable limits.
     INCOMPLETE_STATUS = 'I'  # Patient birth date or sex are not set.
     STATUSES = (
@@ -34,10 +34,10 @@ class Report(models.Model):
     status = models.CharField(max_length=1, blank=True, null=True,
             choices=STATUSES, default=UNANALYZED_STATUS)
 
-    healthworker_id = models.CharField(max_length=255, blank=True, null=True)
+    reporter_id = models.CharField(max_length=255, blank=True, null=True)
     patient_id = models.CharField(max_length=255)
 
-    # Indicators, gathered from the health worker.
+    # Indicators, gathered from the reporter.
     height = models.DecimalField(max_digits=4, decimal_places=1, blank=True,
             null=True, verbose_name='Height (CM)')
     weight = models.DecimalField(max_digits=4, decimal_places=1, blank=True,
@@ -131,10 +131,10 @@ class Report(models.Model):
         return 'Yes' if self.oedema else 'No'
 
     @property
-    def healthworker(self):
-        if getattr(self, '_healthworker', None) is None:
-            self._healthworker = None  # TODO - integrate with rapidsms_healthcare app
-        return self._healthworker
+    def reporter(self):
+        if getattr(self, '_reporter', None) is None:
+            self._reporter = None  # TODO - integrate with rapidsms_healthcare app
+        return self._reporter
 
     @property
     def indicators(self):

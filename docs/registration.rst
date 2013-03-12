@@ -2,45 +2,45 @@
 Registration
 ============
 
-In rapidsms-nutrition, **health workers** keep track of the growth of child
-**patients**. Each health worker and patient must be registered in the
+In rapidsms-nutrition, **reporters** keep track of the growth of child
+**patients**. Each reporter and patient must be registered in the
 application.
 
 .. _registration-health-workers:
 
-Health Workers
-==============
+Reporters
+=========
 
-The following information is needed to register a health worker:
+The following information is needed to register a reporter:
 
 ==========  =======  ==========================================
 Parameter   Format   Description
 ==========  =======  ==========================================
-id          String   A unique identifier for the health worker.
-name        String   The health worker's human-readable name.
+id          String   A unique identifier for the reporter.
+name        String   The reporter's human-readable name.
 ==========  =======  ==========================================
 
-To register a health worker via SMS, send ``NUTRITION REGISTER HEALTHWORKER
-<id> <name>``. The system will register a new health worker with the given
+To register a reporter via SMS, send ``NUTRITION REGISTER REPORTER
+<id> <name>``. The system will register a new reporter with the given
 name and identifier. The identifier must be unique and not already in use.
 
-To deactivate a health worker via SMS, send ``NUTRITION DEACTIVATE
-HEALTHWORKER <id>``. The health worker's record will be marked as inactive and
+To deactivate a reporter via SMS, send ``NUTRITION DEACTIVATE
+REPORTER <id>``. The reporter's record will be marked as inactive and
 they will not be able to make additional assessments.
 
 As an example, the following conversation could occur::
 
-    You:      NUTRITION REGISTER HEALTHWORKER
-    RapidSMS: To register a new nutrition health worker, send: NUTRITION
-              REGISTER HEALTHWORKER <id> <name>
-    You:      NUTRITION REGISTER HEALTHWORKER abc-123 Jordan Brown
-    RapidSMS: You have registered a new nutrition health worker: Jordan
+    You:      NUTRITION REGISTER REPORTER
+    RapidSMS: To register a new nutrition reporter, send: NUTRITION
+              REGISTER REPORTER <id> <name>
+    You:      NUTRITION REGISTER REPORTER abc-123 Jordan Brown
+    RapidSMS: You have registered a new nutrition reporter: Jordan
               Brown (abc-123).
-    You:      NUTRITION REGISTER HEALTHWORKER abc-123 Alex Blue
-    RapidSMS: Sorry, a nutrition health worker is already registered using
+    You:      NUTRITION REGISTER REPORTER abc-123 Alex Blue
+    RapidSMS: Sorry, a nutrition reporter is already registered using
               the identifier abc-123.
-    You:      NUTRITION DEACTIVATE HEALTHWORKER abc-123
-    RapidSMS: Nutrition health worker Jordan Brown (abc-123) has been marked
+    You:      NUTRITION DEACTIVATE REPORTER abc-123
+    RapidSMS: Nutrition reporter Jordan Brown (abc-123) has been marked
               as inactive.
 
 .. _registration-patients:

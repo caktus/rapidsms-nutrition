@@ -68,10 +68,10 @@ class CreateReportHandlerTest(NutritionTestBase):
                 'understand your report.'), reply)
         self.assertEqual(Report.objects.count(), 0)
 
-    def test_unregistered_healthworker(self):
+    def test_unregistered_reporter(self):
         pass  # TODO
 
-    def test_inactive_healthworker(self):
+    def test_inactive_reporter(self):
         pass  # TODO
 
     def test_unregistered_patient(self):

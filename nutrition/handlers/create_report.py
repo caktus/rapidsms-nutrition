@@ -55,8 +55,7 @@ class CreateReportHandler(NutritionPrefixMixin, KeywordHandler):
         return self.success_text.format(**data)
 
     def handle(self, text):
-        # The reporting health worker is determined from the message
-        # connection.
+        # The reporter determined from the message connection.
         self.connection = self.msg.connection
         self.debug('Received report message from {0}'.format(self.connection))
 
