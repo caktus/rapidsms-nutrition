@@ -1,13 +1,10 @@
 from __future__ import unicode_literals
 import csv
 import re
-from urllib import urlencode
 
-from django.conf import settings
-from django.contrib.auth.views import redirect_to_login
-from django.core.urlresolvers import resolve
+from django.contrib.auth.decorators import permission_required
 from django.http import HttpResponse
-from django.shortcuts import redirect
+from django.utils.decorators import method_decorator
 from django.views.generic import View
 from django.views.generic.base import TemplateView
 
@@ -16,23 +13,12 @@ from nutrition.tables import NutritionReportTable
 
 
 class NutritionReportMixin(object):
-    """Allow filtering by patient and healthworker."""
-    # Required permissions, in the format app_label.codename.
-    permissions = ['nutrition.view_report']
-
+    """Allow filtering by patient, healthworker, and status."""
     # Default order by which reports should be displayed.
     ordering = ['-created']
 
+    @method_decorator(permission_required('nutrition.view_report'))
     def dispatch(self, request, *args, **kwargs):
-        """
-        If user does not have the required permissions, redirect them to the
-        login page.
-        """
-        user = request.user
-        if not (user and user.has_perms(self.permissions)):
-            data = urlencode({'next': request.get_full_path()})
-            url = '{0}?{1}'.format(self.login_url, data)
-            return redirect(url)
         return super(NutritionReportMixin, self).dispatch(request, *args,
                 **kwargs)
 
@@ -55,10 +41,6 @@ class NutritionReportMixin(object):
     @property
     def healthworker_id(self):
         return self.request.GET.get('healthworker_id', None)
-
-    @property
-    def login_url(self):
-        return settings.LOGIN_URL
 
     @property
     def patient_id(self):
