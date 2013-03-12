@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+{% load url from future %}
+{% load django_tables2 %}
+
+{% block title %}Nutrition Reports{% endblock title %}
+
+{% block header %}{# Commenting out until issues addressed in trunk. #}{% endblock header %}
+{% block footer %}{# Same here. #}{% endblock footer %}
+
+{% block content %}
+    <div class="span12">
+        <div class="page-header"><h1>Nutrition Reports</h1></div>
+        <div style="margin-bottom:20px;">
+            {% url 'csv_nutrition_reports' as csv %}
+            {% if request.GET %}
+                <a href="{{ csv }}?{{ request.GET.urlencode }}" class="btn btn-primary">Export Selected Reports</a>
+            {% else %}
+                <a href="{{ csv }}" class="btn btn-primary">Export Selected Reports</a>
+            {% endif %}
+        </div>
+        {% render_table reports_table %}
+    </div>
+{% endblock content %}
