@@ -74,10 +74,11 @@ class CreateReportForm(forms.ModelForm):
     def clean(self):
         """Check that healthcare worker is registered and active."""
         cleaned_data = super(CreateReportForm, self).clean()
-        self.instance.reporter_id = 'placeholder'
-        # TODO - Validate that connection is a registered and active
-        # reporter.
+        self.get_reporter_from_connection()
         return cleaned_data
+
+    def get_reporter_from_connection(self):
+        pass  # TODO - validate that reporter is registered & active
 
     def clean_patient_id(self):
         """Check that patient is registered and active."""

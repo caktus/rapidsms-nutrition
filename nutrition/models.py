@@ -143,8 +143,20 @@ class Report(models.Model):
 
     @property
     def reporter(self):
+        """Retrieves the provider record associated with this report.
+
+        If a caller requires that the provider record actually exist, it must
+        ensure that reporter is not None.
+        """
         if not hasattr(self, '_reporter'):
-            self._reporter = None  # TODO - integrate with rapidsms_healthcare app
+            if not self.global_reporter_id:
+                self._reporter = None
+            else:
+                try:
+                    self._reporter = client.providers.get(
+                            self.global_reporter_id)
+                except ProviderDoesNotExist:
+                    self._reporter = None
         return self._reporter
 
     @property

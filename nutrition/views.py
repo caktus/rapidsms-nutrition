@@ -115,13 +115,17 @@ class CSVNutritionReportList(NutritionReportMixin, View):
 
     def render_reporter(self, report):
         """Custom rendering of reporter data."""
-        return 'placeholder'  # TODO
+        if report.reporter:
+            name = report.reporter.get('name', '')
+            if name:
+                return '{0} ({1})'.format(name, report.reporter_id)
+            return report.reporter_id
+        return None
 
     def render_patient(self, report):
         """Custom rendering of patient data."""
-        patient = report.patient
-        if patient:
-            name = patient.get('name', '')
+        if report.patient:
+            name = report.patient.get('name', '')
             if name:
                 return '{0} ({1})'.format(name, report.patient_id)
             return report.patient_id
