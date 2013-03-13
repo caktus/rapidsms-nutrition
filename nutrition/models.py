@@ -15,7 +15,8 @@ class Report(models.Model):
     GOOD_STATUS = 'G'  # The report analysis ran completely.
     CANCELLED_STATUS = 'C'  # Reporter cancelled the report.
     SUSPECT_STATUS = 'S'  # Measurements are beyond reasonable limits.
-    INCOMPLETE_STATUS = 'I'  # Patient birth date or sex are not set.
+    INCOMPLETE_STATUS = 'I'  # Patient birth date, sex, weight or height is
+                             # not set.
     STATUSES = (
         (UNANALYZED_STATUS, 'Not Analyzed'),
         (GOOD_STATUS, 'Good'),
@@ -75,11 +76,11 @@ class Report(models.Model):
         Returns the patient's age at the time of this report, rounded down to
         the nearest full month.
         """
-        patient = self.patient
-        birth_date = patient.get('birth_date', None) if patient else None
-        if birth_date:
-            diff = self.created.date() - birth_date
-            return int(diff.days / 30.475)
+        if self.patient:
+            birth_date = self.patient.get('birth_date', None)
+            if birth_date:
+                diff = self.created.date() - birth_date
+                return int(diff.days / 30.475)
 
     def analyze(self, save=True, calculator=None):
         """Uses pygrowup to calculate z-scores from indicator data.
@@ -89,8 +90,10 @@ class Report(models.Model):
         calculator = calculator or Calculator(False, False, False)
 
         # If the patient's birth_date or sex is not present, pygrowup
-        # cannot analyze the measurements.
-        if self.age is None or self.sex is None:
+        # cannot analyze the measurements. If neither weight nor height is
+        # available, then short-circuit here because there will be nothing
+        # to analyze.
+        if not all([self.age, self.sex]) or not any([self.weight, self.height]):
             self.weight4age = None
             self.height4age = None
             self.weight4height = None
@@ -100,13 +103,19 @@ class Report(models.Model):
             return self
 
         try:
-            if self.weight is not None:
+            if not all([self.weight, self.height]):
+                # We can do some analyzing, but not all.
+                self.status = Report.INCOMPLETE_STATUS
+            else:
+                self.status = Report.GOOD_STATUS
+
+            if self.weight:
                 self.weight4age = calculator.wfa(self.weight, self.age,
                         self.sex)
-            if self.height is not None:
-                self.height4age = calculator.lhfa(self.height, self.age,
-                        self.sex)
-            if self.weight is not None and self.height is not None:
+            if self.height:
+               self.height4age = calculator.lhfa(self.height, self.age,
+                       self.sex)
+            if self.weight and self.height:
                 if self.age <= 24:
                     self.weight4height = calculator.wfl(self.weight, self.age,
                             self.sex, self.height)
@@ -126,7 +135,6 @@ class Report(models.Model):
                 self.save()
             raise e
 
-        self.status = Report.GOOD_STATUS
         if save:
             self.save()
         return self

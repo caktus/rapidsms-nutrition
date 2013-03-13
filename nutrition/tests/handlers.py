@@ -188,7 +188,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(report.height, 50)
         self.assertEqual(report.muac, 10)
         self.assertTrue(report.oedema)
-        self.assertEqual(report.status, Report.GOOD_STATUS)
+        self.assertEqual(report.status, Report.INCOMPLETE_STATUS)
 
     def test_null_weight(self):
         """Weight should not be a required measurement."""
@@ -204,7 +204,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(report.height, 50)
         self.assertEqual(report.muac, 10)
         self.assertTrue(report.oedema)
-        self.assertEqual(report.status, Report.GOOD_STATUS)
+        self.assertEqual(report.status, Report.INCOMPLETE_STATUS)
 
     def test_negative_height(self):
         """An error should be sent if reported height is less than 0."""
@@ -266,7 +266,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(report.height, None)
         self.assertEqual(report.muac, 10)
         self.assertTrue(report.oedema)
-        self.assertEqual(report.status, Report.GOOD_STATUS)
+        self.assertEqual(report.status, Report.INCOMPLETE_STATUS)
 
     def test_null_height(self):
         """Height should not be a required measurement."""
@@ -282,7 +282,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(report.height, None)
         self.assertEqual(report.muac, 10)
         self.assertTrue(report.oedema)
-        self.assertEqual(report.status, Report.GOOD_STATUS)
+        self.assertEqual(report.status, Report.INCOMPLETE_STATUS)
 
     def test_invalid_measurement(self):
         """An error should be sent if pygrowup deems a measurement invalid."""
