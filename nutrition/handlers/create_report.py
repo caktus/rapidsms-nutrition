@@ -14,20 +14,30 @@ class CreateReportHandler(NutritionPrefixMixin, KeywordHandler):
     # The tokens, in order, which will be parsed from the message text.
     token_names = ['patient_id', 'weight', 'height', 'muac', 'oedema']
 
-    help_text = 'To create a nutrition report, send: {prefix} {keyword} '\
-            '<patient_id> <weight in kg> <height in cm> <muac in cm> <oedema '\
-            '(Y/N)>'
-    success_text = 'Thanks {reporter}. Nutrition update for {patient} '\
-            '({patient_id}):\nweight: {weight} kg\nheight: {height} cm\n'\
-            'muac: {muac} cm\noedema: {oedema}'
-    error_text = 'Sorry, an unexpected error occurred while processing '\
-            'your report. Please contact your administrator if this '\
-            'continues to occur.'
-    format_error_text = 'Sorry, the system could not understand your report. '
-    invalid_measurement_text = 'Sorry, one of your measurements is invalid: '\
-            '{message}'
-    form_error_text = 'Sorry, an error occurred while processing your '\
-            'message: {message}'
+    messages = {
+        'help': 'To create a nutrition report, send: {prefix} {keyword} '\
+                '<patient_id> <weight in kg> <height in cm> <muac in cm> '\
+                '<oedema (Y/N)>',
+
+        'success': 'Thanks {reporter}. Nutrition update for {patient} '\
+                '({patient_id}):\nweight: {weight} kg\nheight: {height} cm\n'\
+                'muac: {muac} cm\noedema: {oedema}',
+
+        'format_error': 'Sorry, the system could not understand your report. '\
+                'To create a nutrition report, send: {prefix} {keyword} '\
+                '<patient_id> <weight in kg> <height in cm> <muac in cm>'\
+                '<oedema (Y/N)>',
+
+        'invalid_measurement': 'Sorry, one of your measurements is invalid: '\
+                '{message}',
+
+        'form_error': 'Sorry, an error occurred while processing your '\
+                'message: {message}',
+
+        'error': 'Sorry, an unexpected error occurred while processing '\
+                'your report. Please contact your administrator if this '\
+                'continues to occur.',
+    }
 
     def _get_form(self, data):
         return self.form_class(data, connection=self.connection)
@@ -45,17 +55,8 @@ class CreateReportHandler(NutritionPrefixMixin, KeywordHandler):
             raise ValueError('Received too many tokens')
         return result
 
-    @property
-    def _success_text(self):
-        """Fill in success text with data about the created report."""
-        data = self.report.indicators
-        data['reporter'] = 'placeholder'  # TODO
-        data['patient'] = self.report.patient['name']
-        data['patient_id'] = self.report.patient_id
-        return self.success_text.format(**data)
-
     def handle(self, text):
-        # The reporter determined from the message connection.
+        # The reporter will be determined from the message connection.
         self.connection = self.msg.connection
         self.debug('Received report message from {0}'.format(self.connection))
 
@@ -65,7 +66,7 @@ class CreateReportHandler(NutritionPrefixMixin, KeywordHandler):
         except ValueError as e:
             # Incorrect number of tokens.
             self.exception()
-            self.respond(self.format_error_text + self._help_text)
+            self._respond('format_error', self._help_data)
             return
         else:
             data = ', '.join([': '.join((k, v)) for k, v in parsed.items()])
@@ -76,7 +77,7 @@ class CreateReportHandler(NutritionPrefixMixin, KeywordHandler):
         if not form.is_valid():
             data = {'message': form.error}
             self.debug('Form error: {message}'.format(**data))
-            self.respond(self.form_error_text.format(**data))
+            self._respond('form_error', data)
             return
 
         # Create the new report.
@@ -88,14 +89,18 @@ class CreateReportHandler(NutritionPrefixMixin, KeywordHandler):
             # the measurements provided are beyond reasonable limits.
             self.exception()
             data = {'message': str(e)}
-            self.respond(self.invalid_measurement_text.format(**data))
+            self._respond('invalid_measurement', data)
             return
         except Exception as e:
             self.error('An unexpected error occurred')
             self.exception()
-            self.respond(self.error_text)
+            self._respond('error')
             return
         else:
             # Send a success message to the reporter.
             self.debug('Successfully created a new report!')
-            self.respond(self._success_text)
+            data = self.report.indicators
+            data['reporter'] = 'placeholder'  # TODO
+            data['patient'] = self.report.patient['name']
+            data['patient_id'] = self.report.patient_id
+            self._respond('success', data)

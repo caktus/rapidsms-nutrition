@@ -8,6 +8,7 @@ class NutritionPrefixMixin(object):
     prefix.
     """
     prefix = 'nutrition'
+    messages = {}
 
     @classmethod
     def _keyword(cls):
@@ -17,14 +18,20 @@ class NutritionPrefixMixin(object):
             pattern = r'^\s*(?:%s)\s*(?:%s)(?:[\s,;:]+(.+))?$' % args
             return re.compile(pattern, re.IGNORECASE)
 
+    def _respond(self, msg_type, data=None):
+        """Retrieve and format a message from self.messages."""
+        data = data or {}
+        msg = self.messages[msg_type]
+        return self.respond(msg.format(**data))
+
     @property
-    def _help_text(self):
+    def _help_data(self):
         """Fill in help text with the keyword and prefix used by the class."""
-        kwargs = {
+        data = {
             'prefix': self.prefix.upper(),
             'keyword': self.keyword.split('|')[0].upper(),
         }
-        return self.help_text.format(**kwargs)
+        return data
 
     def help(self):
-        self.respond(self._help_text)
+        self._respond('help', self._help_data)
