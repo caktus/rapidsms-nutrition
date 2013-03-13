@@ -11,13 +11,25 @@ class CreateReportHandler(NutritionPrefixMixin, KeywordHandler):
     keyword = 'report'
     form_class = CreateReportForm
 
-    # The tokens, in order, which will be parsed from the message text.
-    token_names = ['patient_id', 'weight', 'height', 'muac', 'oedema']
+    # We accept messages in the format:
+    #   NUTRITION REPORT patient_id indicator1 value1 indicator2 value2 [...]
+    # By using indicator names, the user need not remember an order by
+    # which to send measurements, and can skip unknown information.
+    _HEIGHT = 'height'
+    _WEIGHT = 'weight'
+    _MUAC = 'muac'
+    _OEDEMA = 'oedema'
+    indicators = {  # Associate canonical names with an indicator.
+        'height': _HEIGHT, 'ht': _HEIGHT, 'h': _HEIGHT,
+        'weight': _WEIGHT, 'wt': _WEIGHT, 'w': _WEIGHT,
+        'muac': _MUAC, 'm': _MUAC,
+        'oedema': _OEDEMA, 'o': _OEDEMA,
+    }
 
     messages = {
         'help': 'To create a nutrition report, send: {prefix} {keyword} '\
-                '<patient_id> <weight in kg> <height in cm> <muac in cm> '\
-                '<oedema (Y/N)>',
+                '<patient_id> H <height (cm)> W <weight (kg)> M <muac (cm)> '\
+                'O <oedema (Y/N>',
 
         'success': 'Thanks {reporter}. Nutrition update for {patient} '\
                 '({patient_id}):\nweight: {weight} kg\nheight: {height} cm\n'\
@@ -25,8 +37,8 @@ class CreateReportHandler(NutritionPrefixMixin, KeywordHandler):
 
         'format_error': 'Sorry, the system could not understand your report. '\
                 'To create a nutrition report, send: {prefix} {keyword} '\
-                '<patient_id> <weight in kg> <height in cm> <muac in cm>'\
-                '<oedema (Y/N)>',
+                '<patient_id> H <height (cm)> W <weight (kg)> M <muac (cm)> '\
+                'O <oedema (Y/N>',
 
         'invalid_measurement': 'Sorry, one of your measurements is invalid: '\
                 '{message}',
@@ -44,15 +56,27 @@ class CreateReportHandler(NutritionPrefixMixin, KeywordHandler):
 
     def _parse(self, text):
         """Tokenize message text."""
+        # Must have one token for patient identifier + 2 for each indicator.
+        tokens = text.split()
+        if len(tokens) % 2 != 1:
+            raise ValueError('Wrong number of tokens.')
         result = {}
-        tokens = text.strip().split()
-        for name in self.token_names:
-            try:
-                result[name] = tokens.pop(0)
-            except IndexError:
-                raise ValueError('Received too few tokens')
-        if tokens:
-            raise ValueError('Received too many tokens')
+
+        # The first token is interpreted as the patient identifier.
+        result['patient_id'] = tokens.pop(0)
+
+        # Each two of the remaining tokens are interpreted as
+        # indicator name + value.
+        while len(tokens):
+            name = tokens.pop(0).lower()
+            val = tokens.pop(0)
+            if name not in self.indicators:
+                raise ValueError('Unrecognized indicator.')
+            indicator = self.indicators.get(name)
+            if indicator in result:
+                raise ValueError('Duplicate indicator.')
+            result[indicator] = val
+
         return result
 
     def handle(self, text):
@@ -64,7 +88,6 @@ class CreateReportHandler(NutritionPrefixMixin, KeywordHandler):
         try:
             parsed = self._parse(text)
         except ValueError as e:
-            # Incorrect number of tokens.
             self.exception()
             self._respond('format_error', self._help_data)
             return

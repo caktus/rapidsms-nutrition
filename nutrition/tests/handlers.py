@@ -31,13 +31,13 @@ class CreateReportHandlerTest(NutritionTestBase):
 
     def test_wrong_prefix(self):
         """Handler should not reply to an incorrect prefix."""
-        replies = self._send('hello report asdf 10 50 10 Y')
+        replies = self._send('hello report asdf w 10 h 50 m 10 o Y')
         self.assertEqual(replies, False)
         self.assertEqual(Report.objects.count(), 0)
 
     def test_wrong_keyword(self):
         """Handler should not reply to an incorrect keyword."""
-        replies = self._send('nutrition hello asdf 10 50 10 Y')
+        replies = self._send('nutrition hello asdf w 10 h 50 m 10 o Y')
         self.assertEqual(replies, False)
         self.assertEqual(Report.objects.count(), 0)
 
@@ -50,18 +50,9 @@ class CreateReportHandlerTest(NutritionTestBase):
                 reply)
         self.assertEqual(Report.objects.count(), 0)
 
-    def test_too_few_tokens(self):
-        """Report message requires prefix, keyword, and 5 arguments."""
-        replies = self._send('nutrition report asdf 10 50 10')
-        self.assertEqual(len(replies), 1)
-        reply = replies[0]
-        self.assertTrue(reply.startswith('Sorry, the system could not '\
-                'understand your report.'), reply)
-        self.assertEqual(Report.objects.count(), 0)
-
-    def test_too_many_tokens(self):
-        """Report message requires prefix, keyword, and 5 arguments."""
-        replies = self._send('nutrition report asdf 10 50 10 Y extra')
+    def test_even_tokens(self):
+        """Report message requires prefix, keyword, and an odd number of tokens"""
+        replies = self._send('nutrition report asdf 10')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
         self.assertTrue(reply.startswith('Sorry, the system could not '\
@@ -76,7 +67,7 @@ class CreateReportHandlerTest(NutritionTestBase):
 
     def test_unregistered_patient(self):
         """Report patient must be registered."""
-        replies = self._send('nutrition report fakeid 10 50 10 Y')
+        replies = self._send('nutrition report fakeid w 10 h 50 m 10 o Y')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
         self.assertTrue(reply.startswith('Sorry, an error occurred while '\
@@ -91,7 +82,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         is unsuccessful.
         """
         _, _, another = self.create_patient('another', birth_date=None)
-        replies = self._send('nutrition report another 10 50 10 Y')
+        replies = self._send('nutrition report another w 10 h 50 m 10 o Y')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
         self.assertTrue(reply.startswith('Thanks'), reply)
@@ -111,7 +102,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         unsuccessful.
         """
         _, _, another, = self.create_patient('another', sex=None)
-        replies = self._send('nutrition report another 10 50 10 Y')
+        replies = self._send('nutrition report another w 10 h 50 m 10 o Y')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
         self.assertTrue(reply.startswith('Thanks'), reply)
@@ -128,7 +119,7 @@ class CreateReportHandlerTest(NutritionTestBase):
     def test_inactive_patient(self):
         """Report patient must be active."""
         client.patients.update(self.patient['id'], status='I')
-        replies = self._send('nutrition report asdf 10 50 10 Y')
+        replies = self._send('nutrition report asdf w 10 h 50 m 10 o Y')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
         self.assertTrue(reply.startswith('Sorry, an error occurred while '\
@@ -139,7 +130,7 @@ class CreateReportHandlerTest(NutritionTestBase):
 
     def test_negative_weight(self):
         """An error should be sent if reported weight is less than 0."""
-        replies = self._send('nutrition report asdf -10 50 10 Y')
+        replies = self._send('nutrition report asdf w -10 h 50 m 10 o Y')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
         self.assertTrue(reply.startswith('Sorry, an error occurred while '\
@@ -150,7 +141,7 @@ class CreateReportHandlerTest(NutritionTestBase):
 
     def test_large_weight(self):
         """An error should be sent if reported weight has >4 digits."""
-        replies = self._send('nutrition report asdf 10000 50 10 Y')
+        replies = self._send('nutrition report asdf w 10000 h 50 m 10 o Y')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
         self.assertTrue(reply.startswith('Sorry, an error occurred while '\
@@ -160,7 +151,7 @@ class CreateReportHandlerTest(NutritionTestBase):
 
     def test_specific_weight(self):
         """Reported weight should be rounded to 1 decimal place."""
-        replies = self._send('nutrition report asdf 10.55 50 10 Y')
+        replies = self._send('nutrition report asdf w 10.55 h 50 m 10 o Y')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
         self.assertTrue(reply.startswith('Thanks'), reply)
@@ -174,9 +165,34 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertTrue(report.oedema)
         self.assertEqual(report.status, Report.GOOD_STATUS)
 
+    def test_invalid_weight(self):
+        replies = self._send('nutrition report asdf w invalid h 50 m 10 o Y')
+        self.assertEqual(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('Sorry, an error occurred while '\
+                'processing your message: '), reply)
+        self.assertTrue('Please send a positive value (in kg) for weight.' in
+                reply, reply)
+        self.assertEqual(Report.objects.count(), 0)
+
+    def test_no_weight(self):
+        replies = self._send('nutrition report asdf h 50 m 10 o Y')
+        self.assertEqual(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('Thanks'), reply)
+        self.assertEqual(Report.objects.count(), 1)
+        report = Report.objects.get()
+        self.assertEqual(report.patient_id, 'asdf')
+        self.assertEqual(long(report.global_patient_id), self.patient['id'])
+        self.assertEqual(report.weight, None)
+        self.assertEqual(report.height, 50)
+        self.assertEqual(report.muac, 10)
+        self.assertTrue(report.oedema)
+        self.assertEqual(report.status, Report.GOOD_STATUS)
+
     def test_null_weight(self):
         """Weight should not be a required measurement."""
-        replies = self._send('nutrition report asdf x 50 10 Y')
+        replies = self._send('nutrition report asdf w x h 50 m 10 o Y')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
         self.assertTrue(reply.startswith('Thanks'), reply)
@@ -192,7 +208,7 @@ class CreateReportHandlerTest(NutritionTestBase):
 
     def test_negative_height(self):
         """An error should be sent if reported height is less than 0."""
-        replies = self._send('nutrition report asdf 10 -50 10 Y')
+        replies = self._send('nutrition report asdf w 10 h -50 m 10 o Y')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
         self.assertTrue(reply.startswith('Sorry, an error occurred while '\
@@ -203,7 +219,7 @@ class CreateReportHandlerTest(NutritionTestBase):
 
     def test_large_height(self):
         """An error should be sent if reported height has >4 digits."""
-        replies = self._send('nutrition report asdf 10 50000 10 Y')
+        replies = self._send('nutrition report asdf w 10 h 50000 m 10 o Y')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
         self.assertTrue(reply.startswith('Sorry, an error occurred while '\
@@ -213,7 +229,7 @@ class CreateReportHandlerTest(NutritionTestBase):
 
     def test_specific_height(self):
         """Reported height should be rounded to 1 decimal place."""
-        replies = self._send('nutrition report asdf 10 50.55 10 Y')
+        replies = self._send('nutrition report asdf w 10 h 50.55 m 10 o Y')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
         self.assertTrue(reply.startswith('Thanks'), reply)
@@ -227,9 +243,34 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertTrue(report.oedema)
         self.assertEqual(report.status, Report.GOOD_STATUS)
 
+    def test_invalid_height(self):
+        replies = self._send('nutrition report asdf w 10 h invalid m 10 o Y')
+        self.assertEqual(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('Sorry, an error occurred while '\
+                'processing your message: '), reply)
+        self.assertTrue('Please send a positive value (in cm) for height.' in
+                reply, reply)
+        self.assertEqual(Report.objects.count(), 0)
+
+    def test_no_height(self):
+        replies = self._send('nutrition report asdf w 10 m 10 o Y')
+        self.assertEqual(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('Thanks'), reply)
+        self.assertEqual(Report.objects.count(), 1)
+        report = Report.objects.get()
+        self.assertEqual(report.patient_id, 'asdf')
+        self.assertEqual(long(report.global_patient_id), self.patient['id'])
+        self.assertEqual(report.weight, 10)
+        self.assertEqual(report.height, None)
+        self.assertEqual(report.muac, 10)
+        self.assertTrue(report.oedema)
+        self.assertEqual(report.status, Report.GOOD_STATUS)
+
     def test_null_height(self):
         """Height should not be a required measurement."""
-        replies = self._send('nutrition report asdf 10 x 10 Y')
+        replies = self._send('nutrition report asdf w 10 h x m 10 o Y')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
         self.assertTrue(reply.startswith('Thanks'), reply)
@@ -247,7 +288,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         """An error should be sent if pygrowup deems a measurement invalid."""
         with mock.patch('pygrowup.pygrowup.Calculator.zscore_for_measurement') as method:
             method.side_effect = InvalidMeasurement
-            replies = self._send('nutrition report asdf 10 50 10 Y')
+            replies = self._send('nutrition report asdf w 10 h 50 m 10 o Y')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
         self.assertTrue(reply.startswith('Sorry, one of your measurements '\
@@ -264,7 +305,7 @@ class CreateReportHandlerTest(NutritionTestBase):
 
     def test_negative_muac(self):
         """An error should be sent if reported muac is less than 0."""
-        replies = self._send('nutrition report asdf 10 50 -10 Y')
+        replies = self._send('nutrition report asdf w 10 h 50 m -10 o Y')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
         self.assertTrue(reply.startswith('Sorry, an error occurred while '\
@@ -275,7 +316,7 @@ class CreateReportHandlerTest(NutritionTestBase):
 
     def test_large_muac(self):
         """An error should be sent if reported muac has >4 digits."""
-        replies = self._send('nutrition report asdf 10 50 10000 Y')
+        replies = self._send('nutrition report asdf w 10 h 50 m 10000 o Y')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
         self.assertTrue(reply.startswith('Sorry, an error occurred while '\
@@ -285,7 +326,7 @@ class CreateReportHandlerTest(NutritionTestBase):
 
     def test_specific_muac(self):
         """Reported muac should be rounded to one decimal place."""
-        replies = self._send('nutrition report asdf 10 50 10.55 Y')
+        replies = self._send('nutrition report asdf w 10 h 50 m 10.55 o Y')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
         self.assertTrue(reply.startswith('Thanks'), reply)
@@ -299,9 +340,34 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertTrue(report.oedema)
         self.assertEqual(report.status, Report.GOOD_STATUS)
 
+    def test_invalid_muac(self):
+        replies = self._send('nutrition report asdf w 10 h 50 m invalid o Y')
+        self.assertEqual(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('Sorry, an error occurred while '\
+                'processing your message: '), reply)
+        self.assertTrue('Please send a positive value (in cm) for mid-upper '\
+                'arm circumference.')
+        self.assertEqual(Report.objects.count(), 0)
+
+    def test_no_muac(self):
+        replies = self._send('nutrition report asdf w 10 h 50 o Y')
+        self.assertEqual(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('Thanks'), reply)
+        self.assertEqual(Report.objects.count(), 1)
+        report = Report.objects.get()
+        self.assertEqual(report.patient_id, 'asdf')
+        self.assertEqual(long(report.global_patient_id), self.patient['id'])
+        self.assertEqual(report.weight, 10)
+        self.assertEqual(report.height, 50)
+        self.assertEqual(report.muac, None)
+        self.assertTrue(report.oedema)
+        self.assertEqual(report.status, Report.GOOD_STATUS)
+
     def test_null_muac(self):
         """Muac should not be a required measurement."""
-        replies = self._send('nutrition report asdf 10 50 x Y')
+        replies = self._send('nutrition report asdf w 10 h 50 m x o Y')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
         self.assertTrue(reply.startswith('Thanks'), reply)
@@ -317,7 +383,7 @@ class CreateReportHandlerTest(NutritionTestBase):
 
     def test_invalid_oedema(self):
         """An error should be sent if reported oedema isn't Y/N."""
-        replies = self._send('nutrition report asdf 10 50 10 invalid')
+        replies = self._send('nutrition report asdf w 10 h 50 m 10 o invalid')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
         self.assertTrue(reply.startswith('Sorry, an error occurred while '\
@@ -326,9 +392,24 @@ class CreateReportHandlerTest(NutritionTestBase):
                 'has oedema.' in reply, reply)
         self.assertEqual(Report.objects.count(), 0)
 
+    def test_no_oedema(self):
+        replies = self._send('nutrition report asdf w 10 h 50 m 10')
+        self.assertEqual(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('Thanks'), reply)
+        self.assertTrue(Report.objects.count(), 1)
+        report = Report.objects.get()
+        self.assertEqual(report.patient_id, 'asdf')
+        self.assertEqual(long(report.global_patient_id), self.patient['id'])
+        self.assertEqual(report.weight, 10)
+        self.assertEqual(report.height, 50)
+        self.assertEqual(report.muac, 10)
+        self.assertEqual(report.oedema, None)
+        self.assertEqual(report.status, Report.GOOD_STATUS)
+
     def test_null_oedema(self):
         """Oedema should not be a required measurement."""
-        replies = self._send('nutrition report asdf 10 50 10 x')
+        replies = self._send('nutrition report asdf w 10 h 50 m 10 o x')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
         self.assertTrue(reply.startswith('Thanks'), reply)
