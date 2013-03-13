@@ -29,6 +29,9 @@ if not settings.configured:
         PROJECT_NAME='Nutrition Test',
         SITE_ID=1,
         SECRET_KEY='this-is-just-for-tests-so-not-that-secret',
+
+        NUTRITION_PATIENT_HEALTHCARE_SOURCE='nutrition',
+        NUTRITION_REPORTER_HEALTHCARE_SOURCE='nutrition',
     )
 
 

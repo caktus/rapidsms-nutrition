@@ -100,7 +100,10 @@ class CreateReportHandler(NutritionPrefixMixin, KeywordHandler):
             # Send a success message to the reporter.
             self.debug('Successfully created a new report!')
             data = self.report.indicators
-            data['reporter'] = 'placeholder'  # TODO
-            data['patient'] = self.report.patient['name']
+            if self.report.reporter:
+                data['reporter'] = self.report.reporter.get('name', '')
+            else:
+                data['reporter'] = 'anonymous'  # TODO
+            data['patient'] = self.report.patient.get('name', '')
             data['patient_id'] = self.report.patient_id
             self._respond('success', data)
