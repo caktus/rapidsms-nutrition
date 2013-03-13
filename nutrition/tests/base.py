@@ -3,22 +3,27 @@ import datetime
 
 from django.contrib.auth.models import User
 
+from rapidsms.conf import settings
 from rapidsms.tests.harness import RapidTest
 
 from healthcare.api import client
 
-from ..models import Report, HEALTHCARE_SOURCE
+from ..models import Report
 
 
 class NutritionTestBase(RapidTest):
 
     def setUp(self):
-        # Before doing anything else, we must clear out the dummy backend.
+        # Before doing anything else, we must clear out the dummy backend
+        # as this is not automatically flushed between tests.
+        self.clear_healthcare_backends()
+        return super(NutritionTestBase, self).setUp()
+
+    def clear_healthcare_backends(self):
         for registry in (client.patients, client.providers):
             registry.backend._patients = {}
             registry.backend._patient_ids = {}
             registry.backend._providers = {}
-        return super(NutritionTestBase, self).setUp()
 
     def create_patient(self, patient_id=None, source=None, **kwargs):
         defaults = {
@@ -29,7 +34,7 @@ class NutritionTestBase(RapidTest):
         defaults.update(**kwargs)
         patient = client.patients.create(**defaults)
 
-        source = source or HEALTHCARE_SOURCE
+        source = source or settings.NUTRITION_PATIENT_HEALTHCARE_SOURCE
         patient_id = patient_id or self.random_string(25)
         client.patients.link(patient['id'], patient_id, source)
         return patient_id, source, patient
@@ -38,6 +43,7 @@ class NutritionTestBase(RapidTest):
         if 'patient_id' not in kwargs:
             patient_id, source, patient = self.create_patient()
             kwargs['patient_id'] = patient_id
+            kwargs['global_patient_id'] = patient['id']
         report = Report.objects.create(**kwargs)
         if analyze:
             report.analyze()

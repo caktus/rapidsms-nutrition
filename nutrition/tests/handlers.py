@@ -90,7 +90,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         When patient birth date is not known, report is created but analysis
         is unsuccessful.
         """
-        self.create_patient('another', birth_date=None)
+        _, _, another = self.create_patient('another', birth_date=None)
         replies = self._send('nutrition report another 10 50 10 Y')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
@@ -98,6 +98,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(Report.objects.count(), 1)
         report = Report.objects.get()
         self.assertEqual(report.patient_id, 'another')
+        self.assertEqual(long(report.global_patient_id), another['id'])
         self.assertEqual(report.weight, 10)
         self.assertEqual(report.height, 50)
         self.assertEqual(report.muac, 10)
@@ -109,7 +110,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         When patient sex is not known, report is created but analysis is
         unsuccessful.
         """
-        self.create_patient('another', sex=None)
+        _, _, another, = self.create_patient('another', sex=None)
         replies = self._send('nutrition report another 10 50 10 Y')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
@@ -117,6 +118,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(Report.objects.count(), 1)
         report = Report.objects.get()
         self.assertEqual(report.patient_id, 'another')
+        self.assertEqual(long(report.global_patient_id), another['id'])
         self.assertEqual(report.weight, 10)
         self.assertEqual(report.height, 50)
         self.assertEqual(report.muac, 10)
@@ -165,6 +167,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(Report.objects.count(), 1)
         report = Report.objects.get()
         self.assertEqual(report.patient_id, 'asdf')
+        self.assertEqual(long(report.global_patient_id), self.patient['id'])
         self.assertEqual(report.weight, Decimal('10.6'))
         self.assertEqual(report.height, 50)
         self.assertEqual(report.muac, 10)
@@ -180,6 +183,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(Report.objects.count(), 1)
         report = Report.objects.get()
         self.assertEqual(report.patient_id, 'asdf')
+        self.assertEqual(long(report.global_patient_id), self.patient['id'])
         self.assertEqual(report.weight, None)
         self.assertEqual(report.height, 50)
         self.assertEqual(report.muac, 10)
@@ -216,6 +220,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(Report.objects.count(), 1)
         report = Report.objects.get()
         self.assertEqual(report.patient_id, 'asdf')
+        self.assertEqual(long(report.global_patient_id), self.patient['id'])
         self.assertEqual(report.weight, 10)
         self.assertEqual(report.height, Decimal('50.6'))
         self.assertEqual(report.muac, 10)
@@ -231,6 +236,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(Report.objects.count(), 1)
         report = Report.objects.get()
         self.assertEqual(report.patient_id, 'asdf')
+        self.assertEqual(long(report.global_patient_id), self.patient['id'])
         self.assertEqual(report.weight, 10)
         self.assertEqual(report.height, None)
         self.assertEqual(report.muac, 10)
@@ -249,6 +255,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(Report.objects.count(), 1)
         report = Report.objects.get()
         self.assertEqual(report.patient_id, 'asdf')
+        self.assertEqual(long(report.global_patient_id), self.patient['id'])
         self.assertEqual(report.weight, 10)
         self.assertEqual(report.height, 50)
         self.assertEqual(report.muac, 10)
@@ -285,6 +292,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(Report.objects.count(), 1)
         report = Report.objects.get()
         self.assertEqual(report.patient_id, 'asdf')
+        self.assertEqual(long(report.global_patient_id), self.patient['id'])
         self.assertEqual(report.weight, 10)
         self.assertEqual(report.height, 50)
         self.assertEqual(report.muac, Decimal('10.6'))
@@ -300,6 +308,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(Report.objects.count(), 1)
         report = Report.objects.get()
         self.assertEqual(report.patient_id, 'asdf')
+        self.assertEqual(long(report.global_patient_id), self.patient['id'])
         self.assertEqual(report.weight, 10)
         self.assertEqual(report.height, 50)
         self.assertEqual(report.muac, None)
@@ -326,6 +335,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(Report.objects.count(), 1)
         report = Report.objects.get()
         self.assertEqual(report.patient_id, 'asdf')
+        self.assertEqual(long(report.global_patient_id), self.patient['id'])
         self.assertEqual(report.weight, 10)
         self.assertEqual(report.height, 50)
         self.assertEqual(report.muac, 10)

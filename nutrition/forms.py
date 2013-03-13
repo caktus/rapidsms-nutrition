@@ -4,10 +4,12 @@ from decimal import Decimal
 from django import forms
 from django.utils.encoding import force_unicode
 
+from rapidsms.conf import settings
+
 from healthcare.api import client
 from healthcare.exceptions import PatientDoesNotExist, ProviderDoesNotExist
 
-from nutrition.models import Report, HEALTHCARE_SOURCE
+from nutrition.models import Report
 from nutrition.fields import NullDecimalField, NullYesNoField
 
 
@@ -43,8 +45,8 @@ class CreateReportForm(forms.ModelForm):
 
         # Descriptive field error messages.
         self.messages = {
-            'patient_id': 'Nutrition reports must be for a patient who is '\
-                    'registered and active.',
+            'patient_id': 'Nutrition reports must be for a patient who '\
+                    'is registered and active.',
             'weight': 'Please send a positive value (in kg) for weight.',
             'height': 'Please send a positive value (in cm) for height.',
             'muac': 'Please send a positive value (in cm) for mid-upper '\
@@ -72,7 +74,7 @@ class CreateReportForm(forms.ModelForm):
     def clean(self):
         """Check that healthcare worker is registered and active."""
         cleaned_data = super(CreateReportForm, self).clean()
-        self.reporter_id = 'placeholder'
+        self.instance.reporter_id = 'placeholder'
         # TODO - Validate that connection is a registered and active
         # reporter.
         return cleaned_data
@@ -80,14 +82,17 @@ class CreateReportForm(forms.ModelForm):
     def clean_patient_id(self):
         """Check that patient is registered and active."""
         val = self.cleaned_data['patient_id']
+        source = settings.NUTRITION_PATIENT_HEALTHCARE_SOURCE
         try:
-            patient = client.patients.get(val, source=HEALTHCARE_SOURCE)
+            patient = client.patients.get(val, source=source)
         except PatientDoesNotExist:
             msg = self.fields['patient_id'].error_messages['invalid']
             raise forms.ValidationError(msg)
         if patient['status'] != 'A':
             msg = self.fields['patient_id'].error_messages['invalid']
             raise forms.ValidationError(msg)
+        # Set the global identifier.
+        self.instance.global_patient_id = patient['id']
         return val
 
     @property
@@ -100,8 +105,4 @@ class CreateReportForm(forms.ModelForm):
         if forms.forms.NON_FIELD_ERRORS in self.errors:
             return self.errors[NON_FIELD_ERRORS].as_text()
         return None
-
-    def save(self, commit=True):
-        self.instance.reporter_id = self.reporter_id
-        return super(CreateReportForm, self).save(commit=commit)
 

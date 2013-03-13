@@ -10,10 +10,6 @@ from healthcare.api import client
 from healthcare.exceptions import PatientDoesNotExist, ProviderDoesNotExist
 
 
-# Used with rapidsms-healthcare.
-HEALTHCARE_SOURCE = 'nutrition'
-
-
 class Report(models.Model):
     UNANALYZED_STATUS = 'U'  # The report has not yet been analyzed.
     GOOD_STATUS = 'G'  # The report analysis ran completely.
@@ -28,14 +24,23 @@ class Report(models.Model):
         (INCOMPLETE_STATUS, 'Incomplete'),
     )
 
+    # Meta data.
     created = models.DateTimeField(auto_now_add=True,
             verbose_name='report date')
     last_updated = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=1, blank=True, null=True,
             choices=STATUSES, default=UNANALYZED_STATUS)
 
+    # Local identifiers, unique to the nutrition healthcare sources defined in
+    # the project settings.
+    # If source is None, these will be equivalent to the global identifiers.
     reporter_id = models.CharField(max_length=255, blank=True, null=True)
     patient_id = models.CharField(max_length=255)
+
+    # Global identifiers, created by rapidsms-healthcare.
+    global_reporter_id = models.CharField(max_length=255, blank=True,
+            null=True)
+    global_patient_id = models.CharField(max_length=255)
 
     # Indicators, gathered from the reporter.
     height = models.DecimalField(max_digits=4, decimal_places=1, blank=True,
@@ -61,7 +66,8 @@ class Report(models.Model):
         verbose_name = 'nutrition report'
 
     def __unicode__(self):
-        return 'Patient {0} on {1}'.format(self.patient_id, self.created.date())
+        return 'Patient {0} on {1}'.format(self.patient_id,
+                self.created.date())
 
     @property
     def age(self):
@@ -76,7 +82,10 @@ class Report(models.Model):
             return int(diff.days / 30.475)
 
     def analyze(self, save=True, calculator=None):
-        """Uses a pygrowup to calculate z-scores from height and weight."""
+        """Uses pygrowup to calculate z-scores from indicator data.
+
+        If save is True, then the Report will be saved in its updated state.
+        """
         calculator = calculator or Calculator(False, False, False)
 
         # If the patient's birth_date or sex is not present, pygrowup
@@ -107,6 +116,8 @@ class Report(models.Model):
         except InvalidMeasurement as e:
             # This may be thrown by pygrowup when calculating z-scores if
             # the measurements provided are beyond reasonable limits.
+            # Before raising this error to the caller, we'll remove
+            # all calculations and set the status to suspect.
             self.weight4age = None
             self.height4age = None
             self.weight4height = None
@@ -132,7 +143,7 @@ class Report(models.Model):
 
     @property
     def reporter(self):
-        if getattr(self, '_reporter', None) is None:
+        if not hasattr(self, '_reporter'):
             self._reporter = None  # TODO - integrate with rapidsms_healthcare app
         return self._reporter
 
@@ -147,13 +158,15 @@ class Report(models.Model):
 
     @property
     def patient(self):
-        if getattr(self, '_patient', None) is None:
+        """Retrieves the patient record associated with this report.
+
+        If a caller requires that the patient record actually exist, it must
+        ensure that patient is not None.
+        """
+        if not hasattr(self, '_patient'):
             try:
-                self._patient = client.patients.get(self.patient_id,
-                        source=HEALTHCARE_SOURCE)
+                self._patient = client.patients.get(self.global_patient_id)
             except PatientDoesNotExist:
-                # If a caller requires that the patient record exist, then it
-                # should ensure that patient is not None.
                 self._patient = None
         return self._patient
 
