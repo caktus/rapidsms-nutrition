@@ -4,10 +4,10 @@ from pygrowup.exceptions import InvalidMeasurement
 from rapidsms.contrib.handlers.handlers.keyword import KeywordHandler
 
 from nutrition.forms import CreateReportForm
-from nutrition.handlers.base import NutritionPrefixMixin
+from nutrition.handlers.base import NutritionHandlerBase
 
 
-class CreateReportHandler(NutritionPrefixMixin, KeywordHandler):
+class CreateReportHandler(NutritionHandlerBase, KeywordHandler):
     keyword = 'report'
     form_class = CreateReportForm
 
@@ -31,7 +31,7 @@ class CreateReportHandler(NutritionPrefixMixin, KeywordHandler):
                 '<patient_id> H <height (cm)> W <weight (kg)> M <muac (cm)> '\
                 'O <oedema (Y/N>',
 
-        'success': 'Thanks {reporter}. Nutrition update for {patient} '\
+        'success': 'Thanks {reporter}. Nutrition report for {patient} '\
                 '({patient_id}):\nweight: {weight} kg\nheight: {height} cm\n'\
                 'muac: {muac} cm\noedema: {oedema}',
 
@@ -50,9 +50,6 @@ class CreateReportHandler(NutritionPrefixMixin, KeywordHandler):
                 'your report. Please contact your administrator if this '\
                 'continues to occur.',
     }
-
-    def _get_form(self, data):
-        return self.form_class(data, connection=self.connection)
 
     def _parse(self, text):
         """Tokenize message text."""
@@ -79,28 +76,13 @@ class CreateReportHandler(NutritionPrefixMixin, KeywordHandler):
 
         return result
 
-    def handle(self, text):
-        # The reporter will be determined from the message connection.
-        self.connection = self.msg.connection
-        self.debug('Received report message from {0}'.format(self.connection))
-
-        # Parse the message into its components.
-        try:
-            parsed = self._parse(text)
-        except ValueError as e:
-            self.exception()
-            self._respond('format_error', self._help_data)
-            return
-        else:
-            data = ', '.join([': '.join((k, v)) for k, v in parsed.items()])
-            self.debug('Parsed report data: {0}'.format(data))
-
-        # Validate the components using a form.
+    def _process(self, parsed):
+        # Validate the parsed data using a form.
         form = self._get_form(parsed)
         if not form.is_valid():
             data = {'message': form.error}
             self.debug('Form error: {message}'.format(**data))
-            self._respond('form_error', data)
+            self._respond('form_error', **data)
             return
 
         # Create the new report.
@@ -112,7 +94,7 @@ class CreateReportHandler(NutritionPrefixMixin, KeywordHandler):
             # the measurements provided are beyond reasonable limits.
             self.exception()
             data = {'message': str(e)}
-            self._respond('invalid_measurement', data)
+            self._respond('invalid_measurement', **data)
             return
         except Exception as e:
             self.error('An unexpected error occurred')
@@ -129,4 +111,4 @@ class CreateReportHandler(NutritionPrefixMixin, KeywordHandler):
                 data['reporter'] = 'anonymous'  # TODO
             data['patient'] = self.report.patient.get('name', '')
             data['patient_id'] = self.report.patient_id
-            self._respond('success', data)
+            self._respond('success', **data)
