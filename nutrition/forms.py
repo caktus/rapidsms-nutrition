@@ -30,7 +30,7 @@ class NutritionFormBase(object):
     def clean_patient_id(self):
         """Validate that the patient is registered and active."""
         patient_id = self.cleaned_data['patient_id']
-        source = settings.NUTRITION_PATIENT_HEALTHCARE_SOURCE
+        source = getattr(settings 'NUTRITION_PATIENT_HEALTHCARE_SOURCE', None)
         try:
             patient = client.patients.get(patient_id, source=source)
         except PatientDoesNotExist:
