@@ -1,6 +1,8 @@
 Welcome to rapidsms-nutrition's documentation!
 ==============================================
 
+Release: v\ |release|.
+
 rapidsms-nutrition is an app which monitors child growth using `RapidSMS
 <http://rapidsms.readthedocs.org>`_.
 
