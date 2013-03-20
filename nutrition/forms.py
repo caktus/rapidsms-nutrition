@@ -30,7 +30,7 @@ class NutritionFormBase(object):
     def clean_patient_id(self):
         """Validate that the patient is registered and active."""
         patient_id = self.cleaned_data['patient_id']
-        source = getattr(settings 'NUTRITION_PATIENT_HEALTHCARE_SOURCE', None)
+        source = getattr(settings, 'NUTRITION_PATIENT_HEALTHCARE_SOURCE', None)
         try:
             patient = client.patients.get(patient_id, source=source)
         except PatientDoesNotExist:
@@ -90,12 +90,9 @@ class CancelReportForm(NutritionFormBase, forms.Form):
         # this feature is not intended to allow reporters to cancel all
         # reports to the beginning of time.
         patient_id = self.cleaned_data['patient_id']
-        reports = Report.objects.filter(patient_id=patient_id)\
-                                .order_by('-created_date')
-        if not reports.exists():
-            # This should be handled by the caller.
-            raise Report.DoesNotExist()
-        report = reports[0]
+        # Report.DoesNotExist should be handled by the caller.
+        report = Report.objects.filter(patient_id=patient_id)\
+                                .latest('created_date')
         report.cancel()
         return report
 

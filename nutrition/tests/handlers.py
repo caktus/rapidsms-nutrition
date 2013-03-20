@@ -118,14 +118,20 @@ class CancelReportHandlerTest(NutritionTestBase):
         self.assertEqual(Report.objects.count(), 1)
         self.assertEqual(Report.objects.get().status, Report.CANCELLED)
 
-    def test_cancel_report(self):
+    def test_cancel_latest_report(self):
         """Handler should cancel the patient's most recent report."""
+        self.report2 = self.create_report(patient_id=self.patient_id,
+                global_patient_id=self.patient['id'], status='G',
+                analyze=False)
         replies = self._send('nutrition cancel asdf')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
         self.assertTrue(reply.startswith('Thanks'), reply)
-        self.assertEqual(Report.objects.count(), 1)
-        self.assertEqual(Report.objects.get().status, Report.CANCELLED)
+        self.assertEqual(Report.objects.count(), 2)
+        self.assertEqual(Report.objects.get(pk=self.report.pk).status,
+                Report.GOOD)
+        self.assertEqual(Report.objects.get(pk=self.report2.pk).status,
+                Report.CANCELLED)
 
     def test_unexpected_error(self):
         """Handler should gracefully handle unexpected exceptions."""
