@@ -8,12 +8,136 @@ from rapidsms.messages import IncomingMessage
 
 from healthcare.api import client
 
+from ..handlers.cancel_report import CancelReportHandler
 from ..handlers.create_report import CreateReportHandler
 from ..models import Report
 from .base import NutritionTestBase
 
 
-__all__ = ['CreateReportHandlerTest']
+__all__ = ['CancelReportHandlerTest', 'CreateReportHandlerTest']
+
+
+class CancelReportHandlerTest(NutritionTestBase):
+    Handler = CancelReportHandler
+
+    def setUp(self):
+        super(CancelReportHandlerTest, self).setUp()
+        self.patient_id = 'asdf'
+        self.patient_id, self.source, self.patient = self.create_patient(
+                self.patient_id)
+        self.report = self.create_report(patient_id=self.patient_id,
+                global_patient_id=self.patient['id'], status='G',
+                analyze=False)
+
+    def _send(self, text):
+        return self.Handler.test(text)
+
+    def test_wrong_prefix(self):
+        """Handler should not reply to an incorrect keyword."""
+        replies = self._send('nutrition hello asdf')
+        self.assertEqual(replies, False)
+        self.assertEqual(Report.objects.count(), 1)
+        self.assertEqual(Report.objects.get().status, Report.GOOD_STATUS)
+
+    def test_wrong_keyword(self):
+        """Handler should not reply to an incorrect keyword."""
+        replies = self._send('hello cancel asdf')
+        self.assertEqual(replies, False)
+        self.assertEqual(Report.objects.count(), 1)
+        self.assertEqual(Report.objects.get().status, Report.GOOD_STATUS)
+
+    def test_help(self):
+        """Prefix + keyword should return help text."""
+        replies = self._send('nutrition cancel')
+        self.assertEqual(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('To cancel the most recent '\
+                'nutrition report'), reply)
+        self.assertEqual(Report.objects.count(), 1)
+        self.assertEqual(Report.objects.get().status, Report.GOOD_STATUS)
+
+    def test_too_many_tokens(self):
+        """Only one token should be allowed."""
+        replies = self._send('nutrition cancel asdf extra')
+        self.assertEqual(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('Sorry, the system could not '\
+                'understand whose report you '), reply)
+        self.assertEqual(Report.objects.count(), 1)
+        self.assertEqual(Report.objects.get().status, Report.GOOD_STATUS)
+
+    def test_unregistered_reporter(self):
+        """Reporter must be registered."""
+        pass  # TODO
+
+    def test_inactive_reporter(self):
+        """Reporter must be active."""
+        pass  # TODO
+
+    def test_unregistered_patient(self):
+        """Report patient must be registered."""
+        replies = self._send('nutrition cancel fakeid')
+        self.assertEqual(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('Sorry, an error occurred while '\
+                'processing your message: '), reply)
+        self.assertTrue('Nutrition reports must be for a patient who is '\
+                'registered and active.' in reply, reply)
+        self.assertEqual(Report.objects.count(), 1)
+        self.assertEqual(Report.objects.get().status, Report.GOOD_STATUS)
+
+    def test_inactive_patient(self):
+        """Report patient must be active."""
+        client.patients.update(self.patient['id'], status='I')
+        replies = self._send('nutrition cancel asdf')
+        self.assertEqual(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('Sorry, an error occurred while '\
+                'processing your message: '), reply)
+        self.assertTrue('Nutrition reports must be for a patient who is '\
+                'registered and active.' in reply, reply)
+        self.assertEqual(Report.objects.count(), 1)
+        self.assertEqual(Report.objects.get().status, Report.GOOD_STATUS)
+
+    def test_no_reports(self):
+        """Handler should gracefully handle when there are no reports."""
+        Report.objects.all().delete()
+        replies = self._send('nutrition cancel asdf')
+        self.assertEqual(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue('Sorry, asdf does not have any ' in reply, reply)
+        self.assertEqual(Report.objects.count(), 0)
+
+    def test_no_uncancelled_reports(self):
+        """Handler should still succeed if report is already cancelled."""
+        Report.objects.all().update(status=Report.CANCELLED_STATUS)
+        replies = self._send('nutrition cancel asdf')
+        self.assertEqual(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('Thanks'), reply)
+        self.assertEqual(Report.objects.count(), 1)
+        self.assertEqual(Report.objects.get().status, Report.CANCELLED_STATUS)
+
+    def test_cancel_report(self):
+        """Handler should cancel the patient's most recent report."""
+        replies = self._send('nutrition cancel asdf')
+        self.assertEqual(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('Thanks'), reply)
+        self.assertEqual(Report.objects.count(), 1)
+        self.assertEqual(Report.objects.get().status, Report.CANCELLED_STATUS)
+
+    def test_unexpected_error(self):
+        """Handler should gracefully handle unexpected exceptions."""
+        with mock.patch('nutrition.forms.CancelReportForm.cancel') as method:
+            method.side_effect = Exception
+            replies = self._send('nutrition cancel asdf')
+        self.assertEqual(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('Sorry, an unexpected error '\
+                'occurred'), reply)
+        self.assertEqual(Report.objects.count(), 1)
+        self.assertEqual(Report.objects.get().status, Report.GOOD_STATUS)
 
 
 class CreateReportHandlerTest(NutritionTestBase):
@@ -53,6 +177,24 @@ class CreateReportHandlerTest(NutritionTestBase):
     def test_even_tokens(self):
         """Report message requires prefix, keyword, and an odd number of tokens"""
         replies = self._send('nutrition report asdf 10')
+        self.assertEqual(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('Sorry, the system could not '\
+                'understand your report.'), reply)
+        self.assertEqual(Report.objects.count(), 0)
+
+    def test_duplicate_token(self):
+        """Report may not contain duplicate tokens prefixes."""
+        replies = self._send('nutrition report asdf w 10 w 10')
+        self.assertEqual(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('Sorry, the system could not '\
+                'understand your report.'), reply)
+        self.assertEqual(Report.objects.count(), 0)
+
+    def test_invalid_token(self):
+        """Report must contain valid token prefixes."""
+        replies = self._send('nutrition report asdf invalid 10')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
         self.assertTrue(reply.startswith('Sorry, the system could not '\
@@ -431,3 +573,14 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(report.muac, 10)
         self.assertEqual(report.oedema, None)
         self.assertEqual(report.status, Report.GOOD_STATUS)
+
+    def test_unexpected_error(self):
+        """Handler should gracefully handle unexpected errors."""
+        with mock.patch('nutrition.forms.CreateReportForm.save') as method:
+            method.side_effect = Exception
+            replies = self._send('nutrition report asdf w 10 h 50 m 10 o Y')
+        self.assertEqual(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('Sorry, an unexpected error '\
+                'occurred'), reply)
+        self.assertEqual(Report.objects.count(), 0)
