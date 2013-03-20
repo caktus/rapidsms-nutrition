@@ -34,7 +34,8 @@ class NutritionTestBase(RapidTest):
         defaults.update(**kwargs)
         patient = client.patients.create(**defaults)
 
-        source = source or settings.NUTRITION_PATIENT_HEALTHCARE_SOURCE
+        source = source or getattr(settings,
+                'NUTRITION_PATIENT_HEALTHCARE_SOURCE', None)
         patient_id = patient_id or self.random_string(25)
         client.patients.link(patient['id'], patient_id, source)
         return patient_id, source, patient
