@@ -25,7 +25,7 @@ class NutritionFormBase(object):
 
     def clean_connection(self):
         """Validate that the reporter is registered and active."""
-        pass  # TODO
+        self.reporter = None  # TODO
 
     def clean_patient_id(self):
         """Validate that the patient is registered and active."""
@@ -52,6 +52,52 @@ class NutritionFormBase(object):
         if forms.forms.NON_FIELD_ERRORS in self.errors:
             return self.errors[NON_FIELD_ERRORS].as_text()
         return None
+
+
+class CancelReportForm(NutritionFormBase, forms.Form):
+    """Cancels a patient's most recently created report."""
+    patient_id = forms.CharField()
+
+    def __init__(self, *args, **kwargs):
+        # Descriptive error messages.
+        self.messages = {
+            'patient_id': 'Nutrition reports must be for a patient who '\
+                    'is registered and active.',
+        }
+        self.messages.update(kwargs.pop('messages', {}))
+
+        if 'error_class' not in kwargs:
+            kwargs['error_class'] = PlainErrorList
+
+        super(CancelReportForm, self).__init__(*args, **kwargs)
+
+        # Set the error messages.
+        for field_name in self.messages:
+            for msg_type in self.fields[field_name].error_messages:
+                field = self.fields[field_name]
+                field.error_messages[msg_type] = self.messages[field_name]
+
+    def cancel(self):
+        """Cancels the patient's most recently created report.
+
+        Raises Report.DoesNotExist if the patient has no reports.
+        """
+        # TODO: filter to only reports created by our connection, to
+        # prevent a text-message race condition.
+
+        # We do not filter on report status. It is possible that the most
+        # recent report is already cancelled, but that's okay for now because
+        # this feature is not intended to allow reporters to cancel all
+        # reports to the beginning of time.
+        patient_id = self.cleaned_data['patient_id']
+        reports = Report.objects.filter(patient_id=patient_id)\
+                                .order_by('-created')
+        if not reports.exists():
+            # This should be handled by the caller.
+            raise Report.DoesNotExist()
+        report = reports[0]
+        report.cancel()
+        return report
 
 
 class CreateReportForm(NutritionFormBase, forms.ModelForm):

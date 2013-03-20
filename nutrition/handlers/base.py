@@ -2,31 +2,44 @@ from __future__ import unicode_literals
 import re
 
 
+__all__ = ['NutritionHandlerBase']
+
+
 class NutritionHandlerBase(object):
     prefix = 'nutrition'  # Common prefix for all Nutrition messages.
+    keyword = None
     form_class = None  # Form used to process data.
+
+    _common_messages = {  # Messages common to most or all Nutrition handlers.
+        'form_error': 'Sorry, an error occurred while processing your '\
+                'message: {message}',
+
+        'error': 'Sorry, an unexpected error occurred while processing your '\
+                'message. Please contact your administrator if this '\
+                'continues to occur.',
+    }
+    _messages = {}  # Handler-specific messages.
 
     @classmethod
     def _colloquial_keyword(cls):
         """If the class has multiple keyword choices, return the first."""
-        if hasattr(cls, 'keyword'):
-            return cls.keyword.split('|')[0]
+        return cls.keyword.split('|')[0]
 
     def _get_form(self, data):
-        if not getattr(self, 'form_class', None):
-            raise NotImplemented('Subclass must specify form_class property')
         return self.form_class(data, connection=self.connection)
 
     @classmethod
     def _keyword(cls):
         """Override the KeywordHandler method to also require prefix."""
-        if hasattr(cls, 'keyword'):
-            args = (cls.prefix, cls.keyword)
-            pattern = r'^\s*(?:%s)\s*(?:%s)(?:[\s,;:]+(.+))?$' % args
-            return re.compile(pattern, re.IGNORECASE)
+        args = (cls.prefix, cls.keyword)
+        pattern = r'^\s*(?:%s)\s*(?:%s)(?:[\s,;:]+(.+))?$' % args
+        return re.compile(pattern, re.IGNORECASE)
 
-    def _parse(self, text):
-        """Tokenize message text and return parsed data."""
+    def _parse(self, raw_text):
+        """Tokenize message text and return parsed data.
+
+        Raises ValueError if the message cannot be parsed.
+        """
         raise NotImplemented('Subclass must define _parse method.')
 
     def _process(self, parsed):
@@ -34,13 +47,17 @@ class NutritionHandlerBase(object):
         raise NotImplemented('Subclass must define _process method.')
 
     def _respond(self, msg_type, **kwargs):
-        """Shortcut to retrieve and format a message from self.messages."""
+        """Shortcut to retrieve and format a message."""
         data = {  # Some common data.
             'prefix': self.prefix.upper(),
             'keyword': self._colloquial_keyword().upper(),
         }
         data.update(**kwargs)
-        return self.respond(self.messages[msg_type].format(**data))
+        if msg_type in self._messages:
+            return self.respond(self._messages[msg_type].format(**data))
+        if msg_type in self._common_messages:
+            return self.respond(self._common_messages[msg_type].format(**data))
+        raise KeyError('Message type {0} not found.'.format(msg_type))
 
     def handle(self, text):
         """

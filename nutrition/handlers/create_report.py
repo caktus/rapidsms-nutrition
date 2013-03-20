@@ -1,15 +1,36 @@
 from __future__ import unicode_literals
 from pygrowup.exceptions import InvalidMeasurement
 
-from rapidsms.contrib.handlers.handlers.keyword import KeywordHandler
+from rapidsms.contrib.handlers import KeywordHandler
 
 from nutrition.forms import CreateReportForm
 from nutrition.handlers.base import NutritionHandlerBase
 
 
+__all__ = ['CreateReportHandler']
+
+
 class CreateReportHandler(NutritionHandlerBase, KeywordHandler):
     keyword = 'report'
     form_class = CreateReportForm
+
+    _messages = {
+        'help': 'To create a nutrition report, send: {prefix} {keyword} '\
+                '<patient_id> H <height (cm)> W <weight (kg)> M <muac (cm)> '\
+                'O <oedema (Y/N>',
+
+        'success': 'Thanks {reporter}. Nutrition report for {patient} '\
+                '({patient_id}):\nweight: {weight} kg\nheight: {height} cm\n'\
+                'muac: {muac} cm\noedema: {oedema}',
+
+        'format_error': 'Sorry, the system could not understand your report. '\
+                'To create a nutrition report, send: {prefix} {keyword} '\
+                '<patient_id> H <height (cm)> W <weight (kg)> M <muac (cm)> '\
+                'O <oedema (Y/N>',
+
+        'invalid_measurement': 'Sorry, one of your measurements is invalid: '\
+                '{message}',
+    }
 
     # We accept messages in the format:
     #   NUTRITION REPORT patient_id indicator1 value1 indicator2 value2 [...]
@@ -26,35 +47,10 @@ class CreateReportHandler(NutritionHandlerBase, KeywordHandler):
         'oedema': _OEDEMA, 'o': _OEDEMA,
     }
 
-    messages = {
-        'help': 'To create a nutrition report, send: {prefix} {keyword} '\
-                '<patient_id> H <height (cm)> W <weight (kg)> M <muac (cm)> '\
-                'O <oedema (Y/N>',
-
-        'success': 'Thanks {reporter}. Nutrition report for {patient} '\
-                '({patient_id}):\nweight: {weight} kg\nheight: {height} cm\n'\
-                'muac: {muac} cm\noedema: {oedema}',
-
-        'format_error': 'Sorry, the system could not understand your report. '\
-                'To create a nutrition report, send: {prefix} {keyword} '\
-                '<patient_id> H <height (cm)> W <weight (kg)> M <muac (cm)> '\
-                'O <oedema (Y/N>',
-
-        'invalid_measurement': 'Sorry, one of your measurements is invalid: '\
-                '{message}',
-
-        'form_error': 'Sorry, an error occurred while processing your '\
-                'message: {message}',
-
-        'error': 'Sorry, an unexpected error occurred while processing '\
-                'your report. Please contact your administrator if this '\
-                'continues to occur.',
-    }
-
-    def _parse(self, text):
+    def _parse(self, raw_text):
         """Tokenize message text."""
         # Must have one token for patient identifier + 2 for each indicator.
-        tokens = text.split()
+        tokens = raw_text.split()
         if len(tokens) % 2 != 1:
             raise ValueError('Wrong number of tokens.')
         result = {}
@@ -106,7 +102,8 @@ class CreateReportHandler(NutritionHandlerBase, KeywordHandler):
             self.debug('Successfully created a new report!')
             data = self.report.indicators
             if self.report.reporter:
-                data['reporter'] = self.report.reporter.get('name', '')
+                name = self.report.reporter.get('name', '')
+                data['reporter'] = name or self.report.reporter['id']
             else:
                 data['reporter'] = 'anonymous'  # TODO
             data['patient'] = self.report.patient.get('name', '')
