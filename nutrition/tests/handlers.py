@@ -60,9 +60,11 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(Report.objects.count(), 0)
 
     def test_unregistered_reporter(self):
+        """Reporter must be registered."""
         pass  # TODO
 
     def test_inactive_reporter(self):
+        """Reporter must be active."""
         pass  # TODO
 
     def test_unregistered_patient(self):
@@ -166,6 +168,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(report.status, Report.GOOD_STATUS)
 
     def test_invalid_weight(self):
+        """Reported weight must be a number."""
         replies = self._send('nutrition report asdf w invalid h 50 m 10 o Y')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
@@ -176,6 +179,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(Report.objects.count(), 0)
 
     def test_no_weight(self):
+        """Weight is not required, but the report will be incomplete."""
         replies = self._send('nutrition report asdf h 50 m 10 o Y')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
@@ -191,7 +195,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(report.status, Report.INCOMPLETE_STATUS)
 
     def test_null_weight(self):
-        """Weight should not be a required measurement."""
+        """Weight is not required, but the report will be incomplete."""
         replies = self._send('nutrition report asdf w x h 50 m 10 o Y')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
@@ -244,6 +248,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(report.status, Report.GOOD_STATUS)
 
     def test_invalid_height(self):
+        """Reported height must be a number."""
         replies = self._send('nutrition report asdf w 10 h invalid m 10 o Y')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
@@ -254,6 +259,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(Report.objects.count(), 0)
 
     def test_no_height(self):
+        """Height is not required, but the report will be incomplete."""
         replies = self._send('nutrition report asdf w 10 m 10 o Y')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
@@ -269,7 +275,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(report.status, Report.INCOMPLETE_STATUS)
 
     def test_null_height(self):
-        """Height should not be a required measurement."""
+        """Height is not required, but the report will be incomplete."""
         replies = self._send('nutrition report asdf w 10 h x m 10 o Y')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
@@ -341,6 +347,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(report.status, Report.GOOD_STATUS)
 
     def test_invalid_muac(self):
+        """Reported muac must be a number."""
         replies = self._send('nutrition report asdf w 10 h 50 m invalid o Y')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
@@ -351,6 +358,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(Report.objects.count(), 0)
 
     def test_no_muac(self):
+        """Muac should not be a required measurement."""
         replies = self._send('nutrition report asdf w 10 h 50 o Y')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
@@ -393,6 +401,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(Report.objects.count(), 0)
 
     def test_no_oedema(self):
+        """Oedema should not be a required measurement."""
         replies = self._send('nutrition report asdf w 10 h 50 m 10')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
