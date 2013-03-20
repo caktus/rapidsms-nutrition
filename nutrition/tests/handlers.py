@@ -37,14 +37,14 @@ class CancelReportHandlerTest(NutritionTestBase):
         replies = self._send('nutrition hello asdf')
         self.assertEqual(replies, False)
         self.assertEqual(Report.objects.count(), 1)
-        self.assertEqual(Report.objects.get().status, Report.GOOD_STATUS)
+        self.assertEqual(Report.objects.get().status, Report.GOOD)
 
     def test_wrong_keyword(self):
         """Handler should not reply to an incorrect keyword."""
         replies = self._send('hello cancel asdf')
         self.assertEqual(replies, False)
         self.assertEqual(Report.objects.count(), 1)
-        self.assertEqual(Report.objects.get().status, Report.GOOD_STATUS)
+        self.assertEqual(Report.objects.get().status, Report.GOOD)
 
     def test_help(self):
         """Prefix + keyword should return help text."""
@@ -54,7 +54,7 @@ class CancelReportHandlerTest(NutritionTestBase):
         self.assertTrue(reply.startswith('To cancel the most recent '\
                 'nutrition report'), reply)
         self.assertEqual(Report.objects.count(), 1)
-        self.assertEqual(Report.objects.get().status, Report.GOOD_STATUS)
+        self.assertEqual(Report.objects.get().status, Report.GOOD)
 
     def test_too_many_tokens(self):
         """Only one token should be allowed."""
@@ -64,7 +64,7 @@ class CancelReportHandlerTest(NutritionTestBase):
         self.assertTrue(reply.startswith('Sorry, the system could not '\
                 'understand whose report you '), reply)
         self.assertEqual(Report.objects.count(), 1)
-        self.assertEqual(Report.objects.get().status, Report.GOOD_STATUS)
+        self.assertEqual(Report.objects.get().status, Report.GOOD)
 
     def test_unregistered_reporter(self):
         """Reporter must be registered."""
@@ -84,7 +84,7 @@ class CancelReportHandlerTest(NutritionTestBase):
         self.assertTrue('Nutrition reports must be for a patient who is '\
                 'registered and active.' in reply, reply)
         self.assertEqual(Report.objects.count(), 1)
-        self.assertEqual(Report.objects.get().status, Report.GOOD_STATUS)
+        self.assertEqual(Report.objects.get().status, Report.GOOD)
 
     def test_inactive_patient(self):
         """Report patient must be active."""
@@ -97,7 +97,7 @@ class CancelReportHandlerTest(NutritionTestBase):
         self.assertTrue('Nutrition reports must be for a patient who is '\
                 'registered and active.' in reply, reply)
         self.assertEqual(Report.objects.count(), 1)
-        self.assertEqual(Report.objects.get().status, Report.GOOD_STATUS)
+        self.assertEqual(Report.objects.get().status, Report.GOOD)
 
     def test_no_reports(self):
         """Handler should gracefully handle when there are no reports."""
@@ -110,13 +110,13 @@ class CancelReportHandlerTest(NutritionTestBase):
 
     def test_no_uncancelled_reports(self):
         """Handler should still succeed if report is already cancelled."""
-        Report.objects.all().update(status=Report.CANCELLED_STATUS)
+        Report.objects.all().update(status=Report.CANCELLED)
         replies = self._send('nutrition cancel asdf')
         self.assertEqual(len(replies), 1)
         reply = replies[0]
         self.assertTrue(reply.startswith('Thanks'), reply)
         self.assertEqual(Report.objects.count(), 1)
-        self.assertEqual(Report.objects.get().status, Report.CANCELLED_STATUS)
+        self.assertEqual(Report.objects.get().status, Report.CANCELLED)
 
     def test_cancel_report(self):
         """Handler should cancel the patient's most recent report."""
@@ -125,7 +125,7 @@ class CancelReportHandlerTest(NutritionTestBase):
         reply = replies[0]
         self.assertTrue(reply.startswith('Thanks'), reply)
         self.assertEqual(Report.objects.count(), 1)
-        self.assertEqual(Report.objects.get().status, Report.CANCELLED_STATUS)
+        self.assertEqual(Report.objects.get().status, Report.CANCELLED)
 
     def test_unexpected_error(self):
         """Handler should gracefully handle unexpected exceptions."""
@@ -137,7 +137,7 @@ class CancelReportHandlerTest(NutritionTestBase):
         self.assertTrue(reply.startswith('Sorry, an unexpected error '\
                 'occurred'), reply)
         self.assertEqual(Report.objects.count(), 1)
-        self.assertEqual(Report.objects.get().status, Report.GOOD_STATUS)
+        self.assertEqual(Report.objects.get().status, Report.GOOD)
 
 
 class CreateReportHandlerTest(NutritionTestBase):
@@ -238,7 +238,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(report.height, 50)
         self.assertEqual(report.muac, 10)
         self.assertTrue(report.oedema)
-        self.assertEqual(report.status, Report.INCOMPLETE_STATUS)
+        self.assertEqual(report.status, Report.INCOMPLETE)
 
     def test_no_sex(self):
         """
@@ -258,7 +258,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(report.height, 50)
         self.assertEqual(report.muac, 10)
         self.assertTrue(report.oedema)
-        self.assertEqual(report.status, Report.INCOMPLETE_STATUS)
+        self.assertEqual(report.status, Report.INCOMPLETE)
 
     def test_inactive_patient(self):
         """Report patient must be active."""
@@ -307,7 +307,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(report.height, 50)
         self.assertEqual(report.muac, 10)
         self.assertTrue(report.oedema)
-        self.assertEqual(report.status, Report.GOOD_STATUS)
+        self.assertEqual(report.status, Report.GOOD)
 
     def test_invalid_weight(self):
         """Reported weight must be a number."""
@@ -334,7 +334,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(report.height, 50)
         self.assertEqual(report.muac, 10)
         self.assertTrue(report.oedema)
-        self.assertEqual(report.status, Report.INCOMPLETE_STATUS)
+        self.assertEqual(report.status, Report.INCOMPLETE)
 
     def test_null_weight(self):
         """Weight is not required, but the report will be incomplete."""
@@ -350,7 +350,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(report.height, 50)
         self.assertEqual(report.muac, 10)
         self.assertTrue(report.oedema)
-        self.assertEqual(report.status, Report.INCOMPLETE_STATUS)
+        self.assertEqual(report.status, Report.INCOMPLETE)
 
     def test_negative_height(self):
         """An error should be sent if reported height is less than 0."""
@@ -387,7 +387,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(report.height, Decimal('50.6'))
         self.assertEqual(report.muac, 10)
         self.assertTrue(report.oedema)
-        self.assertEqual(report.status, Report.GOOD_STATUS)
+        self.assertEqual(report.status, Report.GOOD)
 
     def test_invalid_height(self):
         """Reported height must be a number."""
@@ -414,7 +414,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(report.height, None)
         self.assertEqual(report.muac, 10)
         self.assertTrue(report.oedema)
-        self.assertEqual(report.status, Report.INCOMPLETE_STATUS)
+        self.assertEqual(report.status, Report.INCOMPLETE)
 
     def test_null_height(self):
         """Height is not required, but the report will be incomplete."""
@@ -430,7 +430,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(report.height, None)
         self.assertEqual(report.muac, 10)
         self.assertTrue(report.oedema)
-        self.assertEqual(report.status, Report.INCOMPLETE_STATUS)
+        self.assertEqual(report.status, Report.INCOMPLETE)
 
     def test_invalid_measurement(self):
         """An error should be sent if pygrowup deems a measurement invalid."""
@@ -449,7 +449,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(report.height, 50)
         self.assertEqual(report.muac, 10)
         self.assertTrue(report.oedema)
-        self.assertEqual(report.status, report.SUSPECT_STATUS)
+        self.assertEqual(report.status, report.SUSPECT)
 
     def test_negative_muac(self):
         """An error should be sent if reported muac is less than 0."""
@@ -486,7 +486,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(report.height, 50)
         self.assertEqual(report.muac, Decimal('10.6'))
         self.assertTrue(report.oedema)
-        self.assertEqual(report.status, Report.GOOD_STATUS)
+        self.assertEqual(report.status, Report.GOOD)
 
     def test_invalid_muac(self):
         """Reported muac must be a number."""
@@ -513,7 +513,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(report.height, 50)
         self.assertEqual(report.muac, None)
         self.assertTrue(report.oedema)
-        self.assertEqual(report.status, Report.GOOD_STATUS)
+        self.assertEqual(report.status, Report.GOOD)
 
     def test_null_muac(self):
         """Muac should not be a required measurement."""
@@ -529,7 +529,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(report.height, 50)
         self.assertEqual(report.muac, None)
         self.assertTrue(report.oedema)
-        self.assertEqual(report.status, Report.GOOD_STATUS)
+        self.assertEqual(report.status, Report.GOOD)
 
     def test_invalid_oedema(self):
         """An error should be sent if reported oedema isn't Y/N."""
@@ -556,7 +556,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(report.height, 50)
         self.assertEqual(report.muac, 10)
         self.assertEqual(report.oedema, None)
-        self.assertEqual(report.status, Report.GOOD_STATUS)
+        self.assertEqual(report.status, Report.GOOD)
 
     def test_null_oedema(self):
         """Oedema should not be a required measurement."""
@@ -572,7 +572,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEqual(report.height, 50)
         self.assertEqual(report.muac, 10)
         self.assertEqual(report.oedema, None)
-        self.assertEqual(report.status, Report.GOOD_STATUS)
+        self.assertEqual(report.status, Report.GOOD)
 
     def test_unexpected_error(self):
         """Handler should gracefully handle unexpected errors."""

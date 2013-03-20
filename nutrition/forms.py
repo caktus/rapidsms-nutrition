@@ -91,7 +91,7 @@ class CancelReportForm(NutritionFormBase, forms.Form):
         # reports to the beginning of time.
         patient_id = self.cleaned_data['patient_id']
         reports = Report.objects.filter(patient_id=patient_id)\
-                                .order_by('-created')
+                                .order_by('-created_date')
         if not reports.exists():
             # This should be handled by the caller.
             raise Report.DoesNotExist()

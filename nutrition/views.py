@@ -15,7 +15,7 @@ from nutrition.tables import NutritionReportTable
 class NutritionReportMixin(object):
     """Allow filtering by patient, reporter, and status."""
     # Default order by which reports should be displayed.
-    ordering = ['-created']
+    ordering = ['-created_date']
 
     @method_decorator(permission_required('nutrition.view_report'))
     def dispatch(self, request, *args, **kwargs):
@@ -76,7 +76,7 @@ class NutritionReportList(NutritionReportMixin, TemplateView):
 class CSVNutritionReportList(NutritionReportMixin, View):
     """Export filtered reports to a CSV file."""
     # Fields to include in the csv, in order.
-    attrs = ('id', 'created', 'last_updated', 'reporter', 'patient',
+    attrs = ('id', 'created_date', 'updated_date', 'reporter', 'patient',
             'age', 'sex', 'height', 'weight', 'muac', 'oedema',
             'weight4age', 'height4age', 'weight4height', 'status')
     filename = 'nutrition_reports'
