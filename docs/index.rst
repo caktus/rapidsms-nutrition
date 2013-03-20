@@ -15,8 +15,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   installation
-   registration
+   getting-started
    reports
    views
    releases

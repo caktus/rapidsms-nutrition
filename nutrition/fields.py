@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from django import forms
+from django.utils.encoding import force_unicode
 
 
 class NullDecimalField(forms.fields.DecimalField):
@@ -68,3 +69,12 @@ class NullYesNoField(forms.fields.NullBooleanField):
 
     def _has_changed(self, initial, data):
         return initial != data
+
+
+class PlainErrorList(forms.util.ErrorList):
+    """Custom error list with simple text rendering for SMS."""
+
+    def as_text(self):
+        if not self:
+            return ''
+        return ' '.join(['%s' % force_unicode(e) for e in self])

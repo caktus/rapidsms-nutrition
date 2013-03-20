@@ -17,8 +17,8 @@ class NutritionReportTable(tables.Table):
 
     class Meta:
         model = Report
-        exclude = ('last_updated',)
-        sequence = ('id', 'created', 'reporter_id', 'patient_id',
+        exclude = ('updated_date',)
+        sequence = ('id', 'created_date', 'reporter_id', 'patient_id',
                 'age', 'height', 'weight', 'muac', 'oedema',
                 'weight4age', 'height4age', 'weight4height', 'status')
 
@@ -28,7 +28,7 @@ class NutritionReportTable(tables.Table):
         get_params = urlencode(kwargs)
         return '{0}?{1}'.format(base, get_params)
 
-    def render_created(self, value):
+    def render_created_date(self, value):
         return value.date()
 
     def render_reporter_id(self, value, record):
