@@ -1,5 +1,5 @@
 Django==1.4
 RapidSMS==0.11.0
-pygrowup==0.7.5b0
+pygrowup==0.7.6b0
 rapidsms-healthcare==0.1.0
 django_tables2==0.13.0
