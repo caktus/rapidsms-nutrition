@@ -36,6 +36,7 @@ class CancelReportHandlerTest(NutritionTestBase):
         replies = self._send('nutrition hello asdf')
         self.assertEquals(replies, False)
         self.assertEquals(Report.objects.count(), 1)
+        self.assertTrue(Report.objects.get().active)
         self.assertEquals(Report.objects.get().status, Report.ANALYZED)
 
     def test_wrong_keyword(self):
@@ -43,6 +44,7 @@ class CancelReportHandlerTest(NutritionTestBase):
         replies = self._send('hello cancel asdf')
         self.assertEquals(replies, False)
         self.assertEquals(Report.objects.count(), 1)
+        self.assertTrue(Report.objects.get().active)
         self.assertEquals(Report.objects.get().status, Report.ANALYZED)
 
     def test_help(self):
@@ -53,6 +55,7 @@ class CancelReportHandlerTest(NutritionTestBase):
         self.assertTrue(reply.startswith('To cancel the most recent '\
                 'nutrition report'), reply)
         self.assertEquals(Report.objects.count(), 1)
+        self.assertTrue(Report.objects.get().active)
         self.assertEquals(Report.objects.get().status, Report.ANALYZED)
 
     def test_too_many_tokens(self):
@@ -63,6 +66,7 @@ class CancelReportHandlerTest(NutritionTestBase):
         self.assertTrue(reply.startswith('Sorry, the system could not '\
                 'understand whose report you '), reply)
         self.assertEquals(Report.objects.count(), 1)
+        self.assertTrue(Report.objects.get().active)
         self.assertEquals(Report.objects.get().status, Report.ANALYZED)
 
     def test_unregistered_reporter(self):
@@ -83,6 +87,7 @@ class CancelReportHandlerTest(NutritionTestBase):
         self.assertTrue('Nutrition reports must be for a patient who is '\
                 'registered and active.' in reply, reply)
         self.assertEquals(Report.objects.count(), 1)
+        self.assertTrue(Report.objects.get().active)
         self.assertEquals(Report.objects.get().status, Report.ANALYZED)
 
     def test_inactive_patient(self):
@@ -96,6 +101,7 @@ class CancelReportHandlerTest(NutritionTestBase):
         self.assertTrue('Nutrition reports must be for a patient who is '\
                 'registered and active.' in reply, reply)
         self.assertEquals(Report.objects.count(), 1)
+        self.assertTrue(Report.objects.get().active)
         self.assertEquals(Report.objects.get().status, Report.ANALYZED)
 
     def test_no_reports(self):
@@ -109,13 +115,14 @@ class CancelReportHandlerTest(NutritionTestBase):
 
     def test_no_uncancelled_reports(self):
         """Handler should still succeed if report is already cancelled."""
-        Report.objects.all().update(status=Report.CANCELLED)
+        Report.objects.all().update(active=False)
         replies = self._send('nutrition cancel asdf')
         self.assertEquals(len(replies), 1)
         reply = replies[0]
         self.assertTrue(reply.startswith('Thanks'), reply)
         self.assertEquals(Report.objects.count(), 1)
-        self.assertEquals(Report.objects.get().status, Report.CANCELLED)
+        self.assertFalse(Report.objects.get().active)
+        self.assertEquals(Report.objects.get().status, Report.ANALYZED)
 
     def test_cancel_latest_report(self):
         """Handler should cancel the patient's most recent report."""
@@ -127,10 +134,12 @@ class CancelReportHandlerTest(NutritionTestBase):
         reply = replies[0]
         self.assertTrue(reply.startswith('Thanks'), reply)
         self.assertEquals(Report.objects.count(), 2)
+        self.assertTrue(Report.objects.get(pk=self.report.pk).active)
         self.assertEquals(Report.objects.get(pk=self.report.pk).status,
                 Report.ANALYZED)
+        self.assertFalse(Report.objects.get(pk=self.report2.pk).active)
         self.assertEquals(Report.objects.get(pk=self.report2.pk).status,
-                Report.CANCELLED)
+                Report.ANALYZED)
 
     def test_unexpected_error(self):
         """Handler should gracefully handle unexpected exceptions."""
@@ -142,6 +151,7 @@ class CancelReportHandlerTest(NutritionTestBase):
         self.assertTrue(reply.startswith('Sorry, an unexpected error '\
                 'occurred'), reply)
         self.assertEquals(Report.objects.count(), 1)
+        self.assertTrue(Report.objects.get().active)
         self.assertEquals(Report.objects.get().status, Report.ANALYZED)
 
 
@@ -237,6 +247,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertTrue(reply.startswith('Thanks'), reply)
         self.assertEquals(Report.objects.count(), 1)
         report = Report.objects.get()
+        self.assertTrue(report.active)
         self.assertEquals(report.patient_id, 'another')
         self.assertEquals(long(report.global_patient_id), another['id'])
         self.assertEquals(report.weight, 10)
@@ -257,6 +268,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertTrue(reply.startswith('Thanks'), reply)
         self.assertEquals(Report.objects.count(), 1)
         report = Report.objects.get()
+        self.assertTrue(report.active)
         self.assertEquals(report.patient_id, 'another')
         self.assertEquals(long(report.global_patient_id), another['id'])
         self.assertEquals(report.weight, 10)
@@ -306,6 +318,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertTrue(reply.startswith('Thanks'), reply)
         self.assertEquals(Report.objects.count(), 1)
         report = Report.objects.get()
+        self.assertTrue(report.active)
         self.assertEquals(report.patient_id, 'asdf')
         self.assertEquals(long(report.global_patient_id), self.patient['id'])
         self.assertEquals(report.weight, Decimal('10.6'))
@@ -333,6 +346,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertTrue(reply.startswith('Thanks'), reply)
         self.assertEquals(Report.objects.count(), 1)
         report = Report.objects.get()
+        self.assertTrue(report.active)
         self.assertEquals(report.patient_id, 'asdf')
         self.assertEquals(long(report.global_patient_id), self.patient['id'])
         self.assertEquals(report.weight, None)
@@ -349,6 +363,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertTrue(reply.startswith('Thanks'), reply)
         self.assertEquals(Report.objects.count(), 1)
         report = Report.objects.get()
+        self.assertTrue(report.active)
         self.assertEquals(report.patient_id, 'asdf')
         self.assertEquals(long(report.global_patient_id), self.patient['id'])
         self.assertEquals(report.weight, None)
@@ -386,6 +401,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertTrue(reply.startswith('Thanks'), reply)
         self.assertEquals(Report.objects.count(), 1)
         report = Report.objects.get()
+        self.assertTrue(report.active)
         self.assertEquals(report.patient_id, 'asdf')
         self.assertEquals(long(report.global_patient_id), self.patient['id'])
         self.assertEquals(report.weight, 10)
@@ -413,6 +429,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertTrue(reply.startswith('Thanks'), reply)
         self.assertEquals(Report.objects.count(), 1)
         report = Report.objects.get()
+        self.assertTrue(report.active)
         self.assertEquals(report.patient_id, 'asdf')
         self.assertEquals(long(report.global_patient_id), self.patient['id'])
         self.assertEquals(report.weight, 10)
@@ -429,6 +446,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertTrue(reply.startswith('Thanks'), reply)
         self.assertEquals(Report.objects.count(), 1)
         report = Report.objects.get()
+        self.assertTrue(report.active)
         self.assertEquals(report.patient_id, 'asdf')
         self.assertEquals(long(report.global_patient_id), self.patient['id'])
         self.assertEquals(report.weight, 10)
@@ -448,6 +466,7 @@ class CreateReportHandlerTest(NutritionTestBase):
                 'is invalid: '), reply)
         self.assertEquals(Report.objects.count(), 1)
         report = Report.objects.get()
+        self.assertTrue(report.active)
         self.assertEquals(report.patient_id, 'asdf')
         self.assertEquals(long(report.global_patient_id), self.patient['id'])
         self.assertEquals(report.weight, 10)
@@ -485,6 +504,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertTrue(reply.startswith('Thanks'), reply)
         self.assertEquals(Report.objects.count(), 1)
         report = Report.objects.get()
+        self.assertTrue(report.active)
         self.assertEquals(report.patient_id, 'asdf')
         self.assertEquals(long(report.global_patient_id), self.patient['id'])
         self.assertEquals(report.weight, 10)
@@ -512,6 +532,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertTrue(reply.startswith('Thanks'), reply)
         self.assertEquals(Report.objects.count(), 1)
         report = Report.objects.get()
+        self.assertTrue(report.active)
         self.assertEquals(report.patient_id, 'asdf')
         self.assertEquals(long(report.global_patient_id), self.patient['id'])
         self.assertEquals(report.weight, 10)
@@ -528,6 +549,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertTrue(reply.startswith('Thanks'), reply)
         self.assertEquals(Report.objects.count(), 1)
         report = Report.objects.get()
+        self.assertTrue(report.active)
         self.assertEquals(report.patient_id, 'asdf')
         self.assertEquals(long(report.global_patient_id), self.patient['id'])
         self.assertEquals(report.weight, 10)
@@ -555,6 +577,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertTrue(reply.startswith('Thanks'), reply)
         self.assertTrue(Report.objects.count(), 1)
         report = Report.objects.get()
+        self.assertTrue(report.active)
         self.assertEquals(report.patient_id, 'asdf')
         self.assertEquals(long(report.global_patient_id), self.patient['id'])
         self.assertEquals(report.weight, 10)
@@ -571,6 +594,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertTrue(reply.startswith('Thanks'), reply)
         self.assertEquals(Report.objects.count(), 1)
         report = Report.objects.get()
+        self.assertTrue(report.active)
         self.assertEquals(report.patient_id, 'asdf')
         self.assertEquals(long(report.global_patient_id), self.patient['id'])
         self.assertEquals(report.weight, 10)
@@ -579,7 +603,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEquals(report.oedema, None)
         self.assertEquals(report.status, Report.ANALYZED)
 
-    def test_unexpected_error(self):
+    def test_unexpected_error_in_save(self):
         """Handler should gracefully handle unexpected errors."""
         with mock.patch('nutrition.forms.CreateReportForm.save') as method:
             method.side_effect = Exception
@@ -589,3 +613,23 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertTrue(reply.startswith('Sorry, an unexpected error '\
                 'occurred'), reply)
         self.assertEquals(Report.objects.count(), 0)
+
+    def test_unexpected_error_in_analyze(self):
+        """Handler should gracefully handle unexpected errors."""
+        with mock.patch('pygrowup.pygrowup.Calculator.zscore_for_measurement') as method:
+            method.side_effect = Exception
+            replies = self._send('nutrition report asdf w 10 h 50 m 10 o Y')
+        self.assertEqual(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('Sorry, an unexpected error '\
+                'occurred'), reply)
+        self.assertEquals(Report.objects.count(), 1)
+        report = Report.objects.get()
+        self.assertTrue(report.active)
+        self.assertEquals(report.patient_id, 'asdf')
+        self.assertEquals(long(report.global_patient_id), self.patient['id'])
+        self.assertEquals(report.weight, 10)
+        self.assertEquals(report.height, 50)
+        self.assertEquals(report.muac, 10)
+        self.assertTrue(report.oedema)
+        self.assertEquals(report.status, Report.ERROR)
