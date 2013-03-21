@@ -17,13 +17,13 @@ class Report(models.Model):
     CANCELLED = 'C'  # Reporter cancelled the report.
     SUSPECT = 'S'  # Measurements are beyond reasonable limits.
     INCOMPLETE = 'I'  # Patient birth date, sex, weight or height is not set.
-    STATUSES = (
+    STATUSES = [
         (UNANALYZED, _('Not Analyzed')),
         (ANALYZED, _('Analyzed')),
         (CANCELLED, _('Cancelled')),
         (SUSPECT, _('Suspect')),
         (INCOMPLETE, _('Incomplete')),
-    )
+    ]
 
     # Meta data.
     created_date = models.DateTimeField(auto_now_add=True,
