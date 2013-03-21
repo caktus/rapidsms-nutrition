@@ -8,8 +8,7 @@ from rapidsms.messages import IncomingMessage
 
 from healthcare.api import client
 
-from ..handlers.cancel_report import CancelReportHandler
-from ..handlers.create_report import CreateReportHandler
+from ..handlers import CancelReportHandler, CreateReportHandler
 from ..models import Report
 from .base import NutritionTestBase
 
