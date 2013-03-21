@@ -42,3 +42,26 @@ As an example, the following conversation could occur::
     You:      NUTRITION CANCEL zyx-321
     RapidSMS: Thanks Jordan Brown. The most recent nutrition report for
               Sam Green (zyx-321) has been cancelled.
+
+Report Statuses
+---------------
+
+Reports may have the following statuses:
+
+* **Unanalyzed.** This is the default status when a report has been receieved
+  but analysis has not yet been attempted.
+* **Incomplete.** Analysis failed (partially or completely) because one or
+  more pieces of information was missing:
+
+  - patient sex
+  - patient birth date
+  - reported weight
+  - reported height
+
+* **Suspect.** Analysis failed completely, because reported measurements were
+  outside of reasonable bounds.
+* **Error.** Analysis failed completely, for some other reason. For example, the
+  patient might be old enough that there is no CDC data against which to
+  analyze, or maybe an internal error occurred.
+* **Analyzed.** Analysis completed in full, and the report has z-scores for
+  weight vs. height, weight vs. age, and height vs. age.
