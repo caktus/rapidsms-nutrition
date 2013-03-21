@@ -14,14 +14,12 @@ from healthcare.exceptions import PatientDoesNotExist, ProviderDoesNotExist
 class Report(models.Model):
     UNANALYZED = 'U'  # The report has not yet been analyzed.
     ANALYZED = 'A'  # The report analysis ran completely.
-    CANCELLED = 'C'  # Reporter cancelled the report.
     SUSPECT = 'S'  # Measurements are beyond reasonable limits.
     INCOMPLETE = 'I'  # Patient birth date, sex, weight or height is not set.
     ERROR = 'E'  # Some other error has occurred.
     STATUSES = (
         (UNANALYZED, _('Not Analyzed')),
         (ANALYZED, _('Analyzed')),
-        (CANCELLED, _('Cancelled')),
         (SUSPECT, _('Suspect')),
         (INCOMPLETE, _('Incomplete')),
         (ERROR, _('Error')),
@@ -33,6 +31,7 @@ class Report(models.Model):
     updated_date = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=1, blank=True, null=True,
             choices=STATUSES, default=UNANALYZED)
+    active = models.BooleanField(default=True)
 
     # Local identifiers, unique to the nutrition healthcare sources defined in
     # the project settings.
@@ -151,7 +150,7 @@ class Report(models.Model):
         return self
 
     def cancel(self, save=True):
-        self.status = Report.CANCELLED
+        self.active = False
         if save:
             self.save()
 

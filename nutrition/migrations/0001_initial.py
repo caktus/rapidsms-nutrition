@@ -14,6 +14,7 @@ class Migration(SchemaMigration):
             ('created_date', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
             ('updated_date', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
             ('status', self.gf('django.db.models.fields.CharField')(default=u'U', max_length=1, null=True, blank=True)),
+            ('active', self.gf('django.db.models.fields.BooleanField')(default=True)),
             ('reporter_id', self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True)),
             ('patient_id', self.gf('django.db.models.fields.CharField')(max_length=255)),
             ('global_reporter_id', self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True)),
@@ -37,6 +38,7 @@ class Migration(SchemaMigration):
     models = {
         u'nutrition.report': {
             'Meta': {'object_name': 'Report'},
+            'active': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'created_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'global_patient_id': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'global_reporter_id': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
