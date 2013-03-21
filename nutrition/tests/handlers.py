@@ -579,7 +579,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertEquals(report.oedema, None)
         self.assertEquals(report.status, Report.ANALYZED)
 
-    def test_unexpected_error(self):
+    def test_unexpected_error_in_save(self):
         """Handler should gracefully handle unexpected errors."""
         with mock.patch('nutrition.forms.CreateReportForm.save') as method:
             method.side_effect = Exception
@@ -589,3 +589,22 @@ class CreateReportHandlerTest(NutritionTestBase):
         self.assertTrue(reply.startswith('Sorry, an unexpected error '\
                 'occurred'), reply)
         self.assertEquals(Report.objects.count(), 0)
+
+    def test_unexpected_error_in_analyze(self):
+        """Handler should gracefully handle unexpected errors."""
+        with mock.patch('pygrowup.pygrowup.Calculator.zscore_for_measurement') as method:
+            method.side_effect = Exception
+            replies = self._send('nutrition report asdf w 10 h 50 m 10 o Y')
+        self.assertEqual(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('Sorry, an unexpected error '\
+                'occurred'), reply)
+        self.assertEquals(Report.objects.count(), 1)
+        report = Report.objects.get()
+        self.assertEquals(report.patient_id, 'asdf')
+        self.assertEquals(long(report.global_patient_id), self.patient['id'])
+        self.assertEquals(report.weight, 10)
+        self.assertEquals(report.height, 50)
+        self.assertEquals(report.muac, 10)
+        self.assertTrue(report.oedema)
+        self.assertEquals(report.status, Report.ERROR)

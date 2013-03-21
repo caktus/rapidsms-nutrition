@@ -17,12 +17,14 @@ class Report(models.Model):
     CANCELLED = 'C'  # Reporter cancelled the report.
     SUSPECT = 'S'  # Measurements are beyond reasonable limits.
     INCOMPLETE = 'I'  # Patient birth date, sex, weight or height is not set.
+    ERROR = 'E'  # Some other error has occurred.
     STATUSES = (
         (UNANALYZED, _('Not Analyzed')),
         (ANALYZED, _('Analyzed')),
         (CANCELLED, _('Cancelled')),
         (SUSPECT, _('Suspect')),
         (INCOMPLETE, _('Incomplete')),
+        (ERROR, _('Error')),
     )
 
     # Meta data.
@@ -127,10 +129,19 @@ class Report(models.Model):
             # the measurements provided are beyond reasonable limits.
             # Before raising this error to the caller, we'll remove
             # all calculations and set the status to suspect.
-            self.weight4age = None
-            self.height4age = None
-            self.weight4height = None
+            self.reset_zscores(save=False)
             self.status = Report.SUSPECT
+            if save:
+                self.save()
+            raise e
+        except Exception as e:
+            # Various things might occur, for example the patient is too old
+            # and there is no CDC data available to compare them against.
+            # Unlike InvalidMeasurement, the user probably can't fix the
+            # problem immediately so we'll set a blanket error status before
+            # propagating.
+            self.reset_zscores(save=False)
+            self.status = Report.ERROR
             if save:
                 self.save()
             raise e
@@ -189,6 +200,13 @@ class Report(models.Model):
             except PatientDoesNotExist:
                 self._patient = None
         return self._patient
+
+    def reset_zscores(self, save=True):
+        self.weight4age = None
+        self.height4age = None
+        self.weight4height = None
+        if save:
+            self.save()
 
     @property
     def sex(self):
