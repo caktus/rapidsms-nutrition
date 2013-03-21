@@ -5,6 +5,7 @@ from pygrowup.exceptions import InvalidMeasurement
 from pygrowup.pygrowup import Calculator
 
 from django.db import models
+from django.utils.translation import ugettext_lazy as _
 
 from healthcare.api import client
 from healthcare.exceptions import PatientDoesNotExist, ProviderDoesNotExist
@@ -15,14 +16,13 @@ class Report(models.Model):
     GOOD = 'G'  # The report analysis ran completely.
     CANCELLED = 'C'  # Reporter cancelled the report.
     SUSPECT = 'S'  # Measurements are beyond reasonable limits.
-    INCOMPLETE = 'I'  # Patient birth date, sex, weight or height is
-                             # not set.
+    INCOMPLETE = 'I'  # Patient birth date, sex, weight or height is not set.
     STATUSES = (
-        (UNANALYZED, 'Not Analyzed'),
-        (GOOD, 'Good'),
-        (CANCELLED, 'Cancelled'),
-        (SUSPECT, 'Suspect'),
-        (INCOMPLETE, 'Incomplete'),
+        (UNANALYZED, _('Not Analyzed')),
+        (GOOD, _('Good')),
+        (CANCELLED, _('Cancelled')),
+        (SUSPECT, _('Suspect')),
+        (INCOMPLETE, _('Incomplete')),
     )
 
     # Meta data.

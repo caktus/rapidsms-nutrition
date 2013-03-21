@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 from decimal import Decimal
 
 from django import forms
+from django.utils.translation import ugettext_lazy as _
 
 from rapidsms.conf import settings
 
@@ -61,8 +62,8 @@ class CancelReportForm(NutritionFormBase, forms.Form):
     def __init__(self, *args, **kwargs):
         # Descriptive error messages.
         self.messages = {
-            'patient_id': 'Nutrition reports must be for a patient who '\
-                    'is registered and active.',
+            'patient_id': _('Nutrition reports must be for a patient who is '
+                    'registered and active.'),
         }
         self.messages.update(kwargs.pop('messages', {}))
 
@@ -117,14 +118,14 @@ class CreateReportForm(NutritionFormBase, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         # Descriptive field error messages.
         self.messages = {
-            'patient_id': 'Nutrition reports must be for a patient who '\
-                    'is registered and active.',
-            'weight': 'Please send a positive value (in kg) for weight.',
-            'height': 'Please send a positive value (in cm) for height.',
-            'muac': 'Please send a positive value (in cm) for mid-upper '\
-                    'arm circumference.',
-            'oedema': 'Please send Y or N to indicate whether the patient '\
-                    'has oedema.',
+            'patient_id': _('Nutrition reports must be for a patient who '
+                    'is registered and active.'),
+            'weight': _('Please send a positive value (in kg) for weight.'),
+            'height': _('Please send a positive value (in cm) for height.'),
+            'muac': _('Please send a positive value (in cm) for mid-upper '
+                    'arm circumference.'),
+            'oedema': _('Please send Y or N to indicate whether the patient '
+                    'has oedema.'),
         }
         self.messages.update(kwargs.pop('messages', {}))
 
@@ -142,8 +143,8 @@ class CreateReportForm(NutritionFormBase, forms.ModelForm):
         # Add more specific sizing messages.
         for field_name in ('weight', 'height', 'muac'):
             field = self.fields[field_name]
-            field.error_messages['max_digits'] = 'Nutrition report '\
-                    'measurements should be no more than %s digits in length.'
+            field.error_messages['max_digits'] = _('Nutrition report '
+                    'measurements should be no more than %s digits in length.')
 
     def save(self, *args, **kwargs):
         self.instance.global_patient_id = self.patient['id']

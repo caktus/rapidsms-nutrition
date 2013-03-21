@@ -1,6 +1,8 @@
 from __future__ import unicode_literals
 import re
 
+from django.utils.translation import ugettext_lazy as _
+
 
 __all__ = ['NutritionHandlerBase']
 
@@ -11,12 +13,12 @@ class NutritionHandlerBase(object):
     form_class = None  # Form used to process data.
 
     _common_messages = {  # Messages common to most or all Nutrition handlers.
-        'form_error': 'Sorry, an error occurred while processing your '\
-                'message: {message}',
+        'form_error': _('Sorry, an error occurred while processing your '
+                'message: {message}'),
 
-        'error': 'Sorry, an unexpected error occurred while processing your '\
-                'message. Please contact your administrator if this '\
-                'continues to occur.',
+        'error': _('Sorry, an unexpected error occurred while processing your '
+                'message. Please contact your administrator if this '
+                'continues to occur.'),
     }
     _messages = {}  # Handler-specific messages.
 

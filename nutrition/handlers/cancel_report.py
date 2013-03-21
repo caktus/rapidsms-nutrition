@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+from django.utils.translation import ugettext_lazy as _
+
 from rapidsms.contrib.handlers import KeywordHandler
 
 from nutrition.forms import CancelReportForm
@@ -15,18 +17,18 @@ class CancelReportHandler(NutritionHandlerBase, KeywordHandler):
     form_class = CancelReportForm
 
     _messages = {
-        'help': 'To cancel the most recent nutrition report, send: {prefix} '\
-                '{keyword} <patient_id>',
+        'help': _('To cancel the most recent nutrition report, send: {prefix} '
+                '{keyword} <patient_id>'),
 
-        'success': 'Thanks {reporter}. The most recent nutrition report for '\
-                '{patient} ({patient_id}) has been cancelled.',
+        'success': _('Thanks {reporter}. The most recent nutrition report for '
+                '{patient} ({patient_id}) has been cancelled.'),
 
-        'no_report': 'Sorry, {patient_id} does not have any reports in the '\
-                'system.',
+        'no_report': _('Sorry, {patient_id} does not have any reports in the '
+                'system.'),
 
-        'format_error': 'Sorry, the system could not understand whose report '\
-                'you would like to cancel. To cancel the most recent '\
-                'nutrition report, send: {prefix} {keyword} <patient_id>',
+        'format_error': _('Sorry, the system could not understand whose '
+                'report you would like to cancel. To cancel the most recent '
+                'nutrition report, send: {prefix} {keyword} <patient_id>'),
     }
 
     def _parse(self, raw_text):

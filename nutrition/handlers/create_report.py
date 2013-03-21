@@ -1,6 +1,8 @@
 from __future__ import unicode_literals
 from pygrowup.exceptions import InvalidMeasurement
 
+from django.utils.translation import ugettext_lazy as _
+
 from rapidsms.contrib.handlers import KeywordHandler
 
 from nutrition.forms import CreateReportForm
@@ -15,21 +17,21 @@ class CreateReportHandler(NutritionHandlerBase, KeywordHandler):
     form_class = CreateReportForm
 
     _messages = {
-        'help': 'To create a nutrition report, send: {prefix} {keyword} '\
-                '<patient_id> H <height (cm)> W <weight (kg)> M <muac (cm)> '\
-                'O <oedema (Y/N>',
+        'help': _('To create a nutrition report, send: {prefix} {keyword} '
+                '<patient_id> H <height (cm)> W <weight (kg)> M <muac (cm)> '
+                'O <oedema (Y/N>'),
 
-        'success': 'Thanks {reporter}. Nutrition report for {patient} '\
-                '({patient_id}):\nweight: {weight} kg\nheight: {height} cm\n'\
-                'muac: {muac} cm\noedema: {oedema}',
+        'success': _('Thanks {reporter}. Nutrition report for {patient} '
+                '({patient_id}):\nweight: {weight} kg\nheight: {height} cm\n'
+                'muac: {muac} cm\noedema: {oedema}'),
 
-        'format_error': 'Sorry, the system could not understand your report. '\
-                'To create a nutrition report, send: {prefix} {keyword} '\
-                '<patient_id> H <height (cm)> W <weight (kg)> M <muac (cm)> '\
-                'O <oedema (Y/N>',
+        'format_error': _('Sorry, the system could not understand your '
+                'report. To create a nutrition report, send: {prefix} '
+                '{keyword} <patient_id> H <height (cm)> W <weight (kg)> M '
+                '<muac (cm)> O <oedema (Y/N>'),
 
-        'invalid_measurement': 'Sorry, one of your measurements is invalid: '\
-                '{message}',
+        'invalid_measurement': _('Sorry, one of your measurements is '
+                'invalid: {message}'),
     }
 
     # We accept messages in the format:
