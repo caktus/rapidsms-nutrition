@@ -131,7 +131,7 @@ class NutritionReportListViewTest(NutritionViewTest):
 
     def test_filter_status(self):
         """Reports should be filtered by status."""
-        params = {'status': 'G'}
+        params = {'status': 'A'}
         report = self.create_report(analyze=False, **params)
         other = self.create_report(analyze=False, status='B')
         response = self._get(get_kwargs=params)
@@ -200,7 +200,7 @@ class NutritionReportExportViewTest(NutritionViewTest):
 
     def test_filter_status(self):
         """Reports export should be filtered by status."""
-        params = {'status': 'G'}
+        params = {'status': 'A'}
         report = self.create_report(analyze=False, **params)
         other = self.create_report(analyze=False, status='B')
         response = self._get(get_kwargs=params)

@@ -2,9 +2,8 @@ from __future__ import unicode_literals
 from decimal import Decimal
 
 from django import forms
+from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
-
-from rapidsms.conf import settings
 
 from healthcare.api import client
 from healthcare.exceptions import PatientDoesNotExist, ProviderDoesNotExist

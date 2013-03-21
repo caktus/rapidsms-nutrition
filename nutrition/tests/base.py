@@ -1,9 +1,9 @@
 from __future__ import unicode_literals
 import datetime
 
+from django.conf import settings
 from django.contrib.auth.models import User
 
-from rapidsms.conf import settings
 from rapidsms.tests.harness import RapidTest
 
 from healthcare.api import client

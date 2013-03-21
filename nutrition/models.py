@@ -13,13 +13,13 @@ from healthcare.exceptions import PatientDoesNotExist, ProviderDoesNotExist
 
 class Report(models.Model):
     UNANALYZED = 'U'  # The report has not yet been analyzed.
-    GOOD = 'G'  # The report analysis ran completely.
+    ANALYZED = 'A'  # The report analysis ran completely.
     CANCELLED = 'C'  # Reporter cancelled the report.
     SUSPECT = 'S'  # Measurements are beyond reasonable limits.
     INCOMPLETE = 'I'  # Patient birth date, sex, weight or height is not set.
     STATUSES = (
         (UNANALYZED, _('Not Analyzed')),
-        (GOOD, _('Good')),
+        (ANALYZED, _('Analyzed')),
         (CANCELLED, _('Cancelled')),
         (SUSPECT, _('Suspect')),
         (INCOMPLETE, _('Incomplete')),
@@ -107,7 +107,7 @@ class Report(models.Model):
                 # We can do some analyzing, but not all.
                 self.status = Report.INCOMPLETE
             else:
-                self.status = Report.GOOD
+                self.status = Report.ANALYZED
 
             if self.weight:
                 self.weight4age = calculator.wfa(self.weight, self.age,
