@@ -72,35 +72,35 @@ class NutritionReportListViewTest(NutritionViewTest):
         """Permission is required to get the nutrition reports list page."""
         self.user.user_permissions.all().delete()
         response = self._get()
-        self.assertEqual(response.status_code, 302)  # redirect to login
+        self.assertEquals(response.status_code, 302)  # redirect to login
 
     def test_no_reports(self):
         """Retrieve the nutrition reports list when there are no reports."""
         Report.objects.all().delete()
         response = self._get()
-        self.assertEqual(response.status_code, 200)
+        self.assertEquals(response.status_code, 200)
         queryset, form = self._extract(response)
-        self.assertEqual(queryset.count(), 0)
+        self.assertEquals(queryset.count(), 0)
 
     def test_report(self):
         """Retrieve the nutrition reports list when there is one report."""
         report = self.create_report()
         response = self._get()
-        self.assertEqual(response.status_code, 200)
+        self.assertEquals(response.status_code, 200)
         queryset, form = self._extract(response)
-        self.assertEqual(queryset.count(), 1)
-        self.assertEqual(queryset.get(), report)
+        self.assertEquals(queryset.count(), 1)
+        self.assertEquals(queryset.get(), report)
 
     def test_pagination(self):
         """The reports list should show 10 items per page."""
         for i in range(11):
             self.create_report()
         response = self._get(get_kwargs={'page': 2})
-        self.assertEqual(response.status_code, 200)
+        self.assertEquals(response.status_code, 200)
         queryset, form = self._extract(response)
-        self.assertEqual(queryset.count(), 11)
+        self.assertEquals(queryset.count(), 11)
         page = response.context['reports_table'].page
-        self.assertEqual(page.object_list.data.count(), 1)
+        self.assertEquals(page.object_list.data.count(), 1)
 
     def test_filter_reporter(self):
         """Reports should be filtered by reporter."""
@@ -108,10 +108,10 @@ class NutritionReportListViewTest(NutritionViewTest):
         report = self.create_report(**params)
         other = self.create_report()
         response = self._get(get_kwargs=params)
-        self.assertEqual(response.status_code, 200)
+        self.assertEquals(response.status_code, 200)
         queryset, form = self._extract(response)
-        self.assertEqual(queryset.count(), 1)
-        self.assertEqual(queryset.get(), report)
+        self.assertEquals(queryset.count(), 1)
+        self.assertEquals(queryset.get(), report)
 
     def test_filter_bad_reporter(self):
         """Form does no validation on reporter, but no results returned."""
@@ -128,10 +128,10 @@ class NutritionReportListViewTest(NutritionViewTest):
         report = self.create_report(**params)
         other = self.create_report()
         response = self._get(get_kwargs=params)
-        self.assertEqual(response.status_code, 200)
+        self.assertEquals(response.status_code, 200)
         queryset, form = self._extract(response)
-        self.assertEqual(queryset.count(), 1)
-        self.assertEqual(queryset.get(), report)
+        self.assertEquals(queryset.count(), 1)
+        self.assertEquals(queryset.get(), report)
 
     def test_filter_bad_patient(self):
         """Form does no validation on patient, but no results returned."""
@@ -148,10 +148,10 @@ class NutritionReportListViewTest(NutritionViewTest):
         report = self.create_report(analyze=False, **params)
         other = self.create_report(analyze=False, status='B')
         response = self._get(get_kwargs=params)
-        self.assertEqual(response.status_code, 200)
+        self.assertEquals(response.status_code, 200)
         queryset, form = self._extract(response)
-        self.assertEqual(queryset.count(), 1)
-        self.assertEqual(queryset.get(), report)
+        self.assertEquals(queryset.count(), 1)
+        self.assertEquals(queryset.get(), report)
 
     def test_filter_bad_status(self):
         """Form has error & no results returned if invalid status is given."""
@@ -172,15 +172,15 @@ class NutritionReportExportViewTest(NutritionViewTest):
         return [line.split(',') for line in content.split('\r\n')]
 
     def _check_report(self, response, *reports):
-        self.assertEqual(response.status_code, 200)
+        self.assertEquals(response.status_code, 200)
         csv = self._extract(response)
-        self.assertEqual(len(csv), 1 + len(reports))  # include headers row
+        self.assertEquals(len(csv), 1 + len(reports))  # include headers row
 
         num_columns = 15
         headers, data = csv[0], csv[1:]
-        self.assertEqual(len(headers), num_columns)
+        self.assertEquals(len(headers), num_columns)
         for line in data:
-            self.assertEqual(len(line), num_columns)
+            self.assertEquals(len(line), num_columns)
             pk = line[0]
             report = Report.objects.get(pk=pk)
             self.assertTrue(report in reports)
@@ -189,7 +189,7 @@ class NutritionReportExportViewTest(NutritionViewTest):
         """Permission is required to export a nutrition reports list."""
         self.user.user_permissions.all().delete()
         response = self._get()
-        self.assertEqual(response.status_code, 302)  # redirect to login
+        self.assertEquals(response.status_code, 302)  # redirect to login
 
     def test_no_reports(self):
         """Export reports list when there are no reports."""
