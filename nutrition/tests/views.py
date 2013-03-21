@@ -64,9 +64,9 @@ class NutritionReportListViewTest(NutritionViewTest):
 
     def _extract(self, response):
         """Extract the information we're interested in from the context."""
+        form = response.context['form']
         queryset = response.context['reports_table'].data.queryset
-        filters = response.context['filters']
-        return queryset, filters
+        return queryset, form
 
     def test_no_permission(self):
         """Permission is required to get the nutrition reports list page."""
@@ -79,19 +79,17 @@ class NutritionReportListViewTest(NutritionViewTest):
         Report.objects.all().delete()
         response = self._get()
         self.assertEqual(response.status_code, 200)
-        queryset, filters = self._extract(response)
+        queryset, form = self._extract(response)
         self.assertEqual(queryset.count(), 0)
-        self.assertEqual(filters, {})
 
     def test_report(self):
         """Retrieve the nutrition reports list when there is one report."""
         report = self.create_report()
         response = self._get()
         self.assertEqual(response.status_code, 200)
-        queryset, filters = self._extract(response)
+        queryset, form = self._extract(response)
         self.assertEqual(queryset.count(), 1)
         self.assertEqual(queryset.get(), report)
-        self.assertEqual(filters, {})
 
     def test_pagination(self):
         """The reports list should show 10 items per page."""
@@ -99,9 +97,8 @@ class NutritionReportListViewTest(NutritionViewTest):
             self.create_report()
         response = self._get(get_kwargs={'page': 2})
         self.assertEqual(response.status_code, 200)
-        queryset, filters = self._extract(response)
+        queryset, form = self._extract(response)
         self.assertEqual(queryset.count(), 11)
-        self.assertEqual(filters, {})
         page = response.context['reports_table'].page
         self.assertEqual(page.object_list.data.count(), 1)
 
@@ -112,10 +109,18 @@ class NutritionReportListViewTest(NutritionViewTest):
         other = self.create_report()
         response = self._get(get_kwargs=params)
         self.assertEqual(response.status_code, 200)
-        queryset, filters = self._extract(response)
+        queryset, form = self._extract(response)
         self.assertEqual(queryset.count(), 1)
         self.assertEqual(queryset.get(), report)
-        self.assertEqual(filters, params)
+
+    def test_filter_bad_reporter(self):
+        """Form does no validation on reporter, but no results returned."""
+        report = self.create_report()
+        response = self._get(get_kwargs={'reporter_id': 'bad'})
+        self.assertEquals(response.status_code, 200)
+        queryset, form = self._extract(response)
+        self.assertEquals(queryset.count(), 0)
+        self.assertFalse(form.errors)
 
     def test_filter_patient(self):
         """Reports should be filtered by patient."""
@@ -124,10 +129,18 @@ class NutritionReportListViewTest(NutritionViewTest):
         other = self.create_report()
         response = self._get(get_kwargs=params)
         self.assertEqual(response.status_code, 200)
-        queryset, filters = self._extract(response)
+        queryset, form = self._extract(response)
         self.assertEqual(queryset.count(), 1)
         self.assertEqual(queryset.get(), report)
-        self.assertEqual(filters, params)
+
+    def test_filter_bad_patient(self):
+        """Form does no validation on patient, but no results returned."""
+        report = self.create_report()
+        response = self._get(get_kwargs={'patient_id': 'bad'})
+        self.assertEquals(response.status_code, 200)
+        queryset, form = self._extract(response)
+        self.assertEquals(queryset.count(), 0)
+        self.assertFalse(form.errors)
 
     def test_filter_status(self):
         """Reports should be filtered by status."""
@@ -136,10 +149,18 @@ class NutritionReportListViewTest(NutritionViewTest):
         other = self.create_report(analyze=False, status='B')
         response = self._get(get_kwargs=params)
         self.assertEqual(response.status_code, 200)
-        queryset, filters = self._extract(response)
+        queryset, form = self._extract(response)
         self.assertEqual(queryset.count(), 1)
         self.assertEqual(queryset.get(), report)
-        self.assertEqual(filters, params)
+
+    def test_filter_bad_status(self):
+        """Form has error & no results returned if invalid status is given."""
+        report = self.create_report()
+        response = self._get(get_kwargs={'status': 'bad'})
+        self.assertEquals(response.status_code, 200)
+        queryset, form = self._extract(response)
+        self.assertEquals(queryset.count(), 0)
+        self.assertTrue('status' in form.errors)
 
 
 class NutritionReportExportViewTest(NutritionViewTest):
@@ -190,6 +211,12 @@ class NutritionReportExportViewTest(NutritionViewTest):
         response = self._get(get_kwargs=params)
         self._check_report(response, report)
 
+    def test_filter_bad_reporter(self):
+        """Form does no validation on reporter, but no results returned."""
+        report = self.create_report()
+        response = self._get(get_kwargs={'reporter_id': 'bad'})
+        self._check_report(response)
+
     def test_filter_patient(self):
         """Reports export should be filtered by patient."""
         params = {'patient_id': 'hello'}
@@ -198,6 +225,12 @@ class NutritionReportExportViewTest(NutritionViewTest):
         response = self._get(get_kwargs=params)
         self._check_report(response, report)
 
+    def test_filter_bad_patient(self):
+        """Form does no validation on patient, but no results returned."""
+        report = self.create_report()
+        response = self._get(get_kwargs={'patient_id': 'bad'})
+        self._check_report(response)
+
     def test_filter_status(self):
         """Reports export should be filtered by status."""
         params = {'status': 'A'}
@@ -205,3 +238,14 @@ class NutritionReportExportViewTest(NutritionViewTest):
         other = self.create_report(analyze=False, status='B')
         response = self._get(get_kwargs=params)
         self._check_report(response, report)
+
+    def test_filter_bad_status(self):
+        """Invalid status causes redirect to regular list view."""
+        report = self.create_report()
+        response = self._get(get_kwargs={'status': 'bad'}, follow=True)
+        correct_url = reverse('nutrition_reports') + '?status=bad'
+        self.assertRedirects(response, correct_url)
+        queryset = response.context['reports_table'].data.queryset
+        form = response.context['form']
+        self.assertEquals(queryset.count(), 0)
+        self.assertTrue('status' in form.errors)
