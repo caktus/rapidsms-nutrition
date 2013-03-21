@@ -20,7 +20,11 @@ class NutritionReportTable(tables.Table):
         exclude = ('updated_date', 'global_patient_id', 'global_reporter_id')
         sequence = ('id', 'created_date', 'reporter_id', 'patient_id',
                 'age', 'height', 'weight', 'muac', 'oedema',
-                'weight4age', 'height4age', 'weight4height', 'status')
+                'weight4age', 'height4age', 'weight4height', 'status',
+                'active')
+
+    def render_active(self, value):
+        return 'Active' if value else 'Cancelled'
 
     def render_created_date(self, value):
         return value.date()
