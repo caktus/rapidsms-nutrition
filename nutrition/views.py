@@ -3,52 +3,30 @@ import csv
 import re
 
 from django.contrib.auth.decorators import permission_required
-from django.http import HttpResponse
+from django.core.urlresolvers import reverse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.utils.decorators import method_decorator
 from django.views.generic import View
 from django.views.generic.base import TemplateView
 
+from nutrition.forms import ReportFilterForm
 from nutrition.models import Report
 from nutrition.tables import NutritionReportTable
 
 
 class NutritionReportMixin(object):
     """Allow filtering by patient, reporter, and status."""
-    # Default order by which reports should be displayed.
-    ordering = ['-created_date']
+    ordering = ['-created_date']  # Default order in which to display reports.
 
     @method_decorator(permission_required('nutrition.view_report'))
     def dispatch(self, request, *args, **kwargs):
+        self.form = ReportFilterForm(self.request.GET)
+        if self.form.is_valid():
+            self.reports = self.form.get_reports(ordering=self.ordering)
+        else:
+            self.reports = Report.objects.none()
         return super(NutritionReportMixin, self).dispatch(request, *args,
                 **kwargs)
-
-    def get_filters(self):
-        filters = {}
-        if self.patient_id:
-            filters['patient_id'] = self.patient_id
-        if self.reporter_id:
-            filters['reporter_id'] = self.reporter_id
-        if self.status:
-            filters['status'] = self.status
-        return filters
-
-    def get_reports(self, filters=None, ordering=None):
-        """Returns filtered reports list."""
-        filters = self.get_filters() if filters is None else filters
-        ordering = self.ordering if ordering is None else ordering
-        return Report.objects.filter(**filters).order_by(*ordering)
-
-    @property
-    def reporter_id(self):
-        return self.request.GET.get('reporter_id', None)
-
-    @property
-    def patient_id(self):
-        return self.request.GET.get('patient_id', None)
-
-    @property
-    def status(self):
-        return self.request.GET.get('status', None)
 
 
 class NutritionReportList(NutritionReportMixin, TemplateView):
@@ -62,13 +40,11 @@ class NutritionReportList(NutritionReportMixin, TemplateView):
         return self.request.GET.get('page', 1)
 
     def get_context_data(self, *args, **kwargs):
-        filters = self.get_filters()
-        reports = self.get_reports(filters)
-        reports_table = NutritionReportTable(reports,
+        reports_table = NutritionReportTable(self.reports,
                 template=self.table_template_name)
         reports_table.paginate(page=self.page, per_page=self.reports_per_page)
         return {
-            'filters': filters,
+            'form': self.form,
             'reports_table': reports_table,
         }
 
@@ -88,6 +64,11 @@ class CSVNutritionReportList(NutritionReportMixin, View):
         return [p.sub(' ', attr).title() for attr in self.attrs]
 
     def get(self, request, *args, **kwargs):
+        if not self.form.is_valid():
+            url = reverse('nutrition_reports')
+            if request.GET:
+                url = '{0}?{1}'.format(url, request.GET.urlencode())
+            return HttpResponseRedirect(url)
         response = HttpResponse(content_type='text/csv')
         content_disposition = 'attachment; filename=%s.csv' % self.filename
         response['Content-Disposition'] = content_disposition
@@ -98,7 +79,7 @@ class CSVNutritionReportList(NutritionReportMixin, View):
 
     def get_data(self):
         rows = [self.column_titles]  # Column titles are first row.
-        for report in self.get_reports():
+        for report in self.reports:
             row = []
             for attr in self.attrs:
                 # Allow (optional) custom rendering of each column.

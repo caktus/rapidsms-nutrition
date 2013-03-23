@@ -10,5 +10,9 @@ created, with the most recent reports first. By clicking on a column header,
 you can reorder the data by that column. By clicking a column a second time,
 the data will be ordered by that column in reverse.
 
-**Filtering.** Reports may be filtered by reporter, patient, or status. To
-apply filtering, click on the value that you wish to filter by.
+**Filtering.** Reports can be filtered by patient, reporter, and status using
+the filters form on the left of the page. The view will only show reports
+which match all filters.
+
+**Export.** You can use the "Export results as CSV" link on the page to export
+tabular data for all results matching the current filters.
