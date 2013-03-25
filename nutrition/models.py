@@ -17,13 +17,13 @@ class Report(models.Model):
     SUSPECT = 'S'  # Measurements are beyond reasonable limits.
     INCOMPLETE = 'I'  # Patient birth date, sex, weight or height is not set.
     ERROR = 'E'  # Some other error has occurred.
-    STATUSES = (
+    STATUSES = [
         (UNANALYZED, _('Not Analyzed')),
         (ANALYZED, _('Analyzed')),
         (SUSPECT, _('Suspect')),
         (INCOMPLETE, _('Incomplete')),
         (ERROR, _('Error')),
-    )
+    ]
 
     # Meta data.
     created_date = models.DateTimeField(auto_now_add=True,

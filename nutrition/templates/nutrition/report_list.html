@@ -1,24 +1,50 @@
 {% extends "layout.html" %}
 {% load url from future %}
-{% load django_tables2 %}
+{% load django_tables2 forms_tags %}
 
 {% block title %}Nutrition Reports{% endblock title %}
 
-{% block header %}{# Commenting out until issues addressed in trunk. #}{% endblock header %}
-{% block footer %}{# Same here. #}{% endblock footer %}
+{% block stylesheets %}
+    {% comment %}The current forms styles in RapidSMS don't work well with
+    the Bootstrap upgrade. We'll remove that stylesheet until these issues
+    are addressed in core.{% endcomment %}
+    <link type="text/css" rel="stylesheet" href="{{ STATIC_URL }}rapidsms/stylesheets/splits.css" />
+    <link type="text/css" rel="stylesheet" href="{{ STATIC_URL }}rapidsms/stylesheets/modules.css" />
+    <link type="text/css" rel="stylesheet" href="{{ STATIC_URL }}rapidsms/stylesheets/tables.css" />
+    <link type="text/css" rel="stylesheet" href="{{ STATIC_URL }}rapidsms/stylesheets/icons.css" />
+    <link type="text/css" rel="stylesheet" href="{{ STATIC_URL }}bootstrap/css/bootstrap.min.css" />
+    <link type="text/css" rel="stylesheet" href="{{ STATIC_URL }}rapidsms/stylesheets/base.css" />
+    <link type="text/css" rel="stylesheet" href="{{ STATIC_URL }}bootstrap/css/bootstrap-responsive.css" />
+{% endblock stylesheets %}
 
 {% block content %}
-    <div class="span12">
+    <div class="span12" id="nutrition">
         <div class="page-header"><h1>Nutrition Reports</h1></div>
-        <p>Showing reports {{ reports_table.page.start_index }} - {{ reports_table.page.end_index }} of {{ reports_table.data.queryset.count }}.</p>
-        <div style="margin-bottom:20px;">
-            {% url 'csv_nutrition_reports' as csv %}
-            {% if request.GET %}
-                <a href="{{ csv }}?{{ request.GET.urlencode }}" class="btn btn-primary">Export Selected Reports</a>
-            {% else %}
-                <a href="{{ csv }}" class="btn btn-primary">Export Selected Reports to CSV</a>
-            {% endif %}
+        <div class="row-fluid">
+            <div class="span3">
+                <form method="GET">
+                    {% render_form form %}
+                    <input class="btn btn-primary" type="submit" value="Update Filters" />
+                    <a class="btn" href="{% url 'nutrition_reports' %}">Clear Filters</a>
+                </form>
+            </div>
+            <div class="span9">
+                {% if reports_table.data.queryset.exists %}
+                    <p>
+                        Displaying reports {{ reports_table.page.start_index }} -
+                        {{ reports_table.page.end_index }} of {{ reports_table.data.queryset.count }}.<br/>
+                        {% url 'csv_nutrition_reports' as csv %}
+                        {% if request.GET %}
+                            <a href="{{ csv }}?{{ request.GET.urlencode }}">Export results as CSV</a>
+                        {% else %}
+                            <a href="{{ csv }}">Export results as CSV</a>
+                        {% endif %}
+                    </p>
+                    {% render_table reports_table %}
+                {% else %}
+                    <p>No reports match your query.</p>
+                {% endif %}
+            </div>
         </div>
-        {% render_table reports_table %}
     </div>
 {% endblock content %}
