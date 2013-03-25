@@ -50,7 +50,7 @@ class NutritionFormBase(object):
             if field in self.errors:
                 return self.errors[field].as_text()
         if forms.forms.NON_FIELD_ERRORS in self.errors:
-            return self.errors[NON_FIELD_ERRORS].as_text()
+            return self.errors[forms.forms.NON_FIELD_ERRORS].as_text()
         return None
 
 
