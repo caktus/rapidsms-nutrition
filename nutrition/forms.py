@@ -50,7 +50,7 @@ class NutritionFormBase(object):
             if field in self.errors:
                 return self.errors[field].as_text()
         if forms.forms.NON_FIELD_ERRORS in self.errors:
-            return self.errors[NON_FIELD_ERRORS].as_text()
+            return self.errors[forms.forms.NON_FIELD_ERRORS].as_text()
         return None
 
 
@@ -148,3 +148,18 @@ class CreateReportForm(NutritionFormBase, forms.ModelForm):
     def save(self, *args, **kwargs):
         self.instance.global_patient_id = self.patient['id']
         return super(CreateReportForm, self).save(*args, **kwargs)
+
+
+class ReportFilterForm(forms.Form):
+    patient_id = forms.CharField(label='Patient ID', required=False)
+    reporter_id = forms.CharField(label='Reporter ID', required=False)
+    status = forms.ChoiceField(choices=[('', '')] + Report.STATUSES,
+            required=False)
+
+    def get_reports(self, ordering=None):
+        if self.is_valid():
+            filters = dict([(k, v) for k, v in self.cleaned_data.iteritems()
+                    if v])
+            if ordering is not None:
+                return Report.objects.filter(**filters).order_by(*ordering)
+            return Report.objects.filter(**filters)
