@@ -20,7 +20,7 @@ class NutritionReportMixin(object):
 
     @method_decorator(permission_required('nutrition.view_report'))
     def dispatch(self, request, *args, **kwargs):
-        self.form = ReportFilterForm(self.request.GET)
+        self.form = ReportFilterForm(request.GET)
         if self.form.is_valid():
             self.reports = self.form.get_reports(ordering=self.ordering)
         else:
