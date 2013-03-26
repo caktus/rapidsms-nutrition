@@ -1,4 +1,6 @@
 from __future__ import unicode_literals
+import logging
+
 from pygrowup.exceptions import InvalidMeasurement
 
 from django.utils.translation import ugettext_lazy as _
@@ -10,6 +12,9 @@ from nutrition.handlers.base import NutritionHandlerBase
 
 
 __all__ = ['CreateReportHandler']
+
+
+logger = logging.getLogger(__name__)
 
 
 class CreateReportHandler(NutritionHandlerBase, KeywordHandler):
@@ -79,7 +84,7 @@ class CreateReportHandler(NutritionHandlerBase, KeywordHandler):
         form = self._get_form(parsed)
         if not form.is_valid():
             data = {'message': form.error}
-            self.debug('Form error: {message}'.format(**data))
+            logger.error('Form error: {message}'.format(**data))
             self._respond('form_error', **data)
             return
 
@@ -90,18 +95,17 @@ class CreateReportHandler(NutritionHandlerBase, KeywordHandler):
         except InvalidMeasurement as e:
             # This may be thrown by pygrowup when calculating z-scores if
             # the measurements provided are beyond reasonable limits.
-            self.exception()
+            logger.exception('The measurements are out of reasonable range')
             data = {'message': str(e)}
             self._respond('invalid_measurement', **data)
             return
         except Exception as e:
-            self.error('An unexpected error occurred')
-            self.exception()
+            logger.exception('An unexpected processing error occurred')
             self._respond('error')
             return
         else:
             # Send a success message to the reporter.
-            self.debug('Successfully created a new report!')
+            logger.debug('Successfully created a new report!')
             data = self.report.indicators
             if self.report.reporter:
                 name = self.report.reporter.get('name', '')
