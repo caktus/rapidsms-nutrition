@@ -11,7 +11,7 @@ from ..models import Report
 from .base import NutritionTestBase
 
 
-__all__ = ['NutritionReportListViewTest', 'NutritionReportExportViewTest']
+__all__ = ['NutritionReportListViewTest', 'CSVNutritionReportListViewTest']
 
 
 class NutritionViewTest(NutritionTestBase):
@@ -65,7 +65,7 @@ class NutritionReportListViewTest(NutritionViewTest):
     def _extract(self, response):
         """Extract the information we're interested in from the context."""
         form = response.context['form']
-        queryset = response.context['reports_table'].data.queryset
+        queryset = response.context['table'].data.queryset
         return queryset, form
 
     def test_no_permission(self):
@@ -92,14 +92,14 @@ class NutritionReportListViewTest(NutritionViewTest):
         self.assertEquals(queryset.get(), report)
 
     def test_pagination(self):
-        """The reports list should show 10 items per page."""
-        for i in range(11):
+        """The reports list should show 20 items per page."""
+        for i in range(21):
             self.create_report()
         response = self._get(get_kwargs={'page': 2})
         self.assertEquals(response.status_code, 200)
         queryset, form = self._extract(response)
-        self.assertEquals(queryset.count(), 11)
-        page = response.context['reports_table'].page
+        self.assertEquals(queryset.count(), 21)
+        page = response.context['table'].page
         self.assertEquals(page.object_list.data.count(), 1)
 
     def test_filter_reporter(self):
@@ -163,7 +163,7 @@ class NutritionReportListViewTest(NutritionViewTest):
         self.assertTrue('status' in form.errors)
 
 
-class NutritionReportExportViewTest(NutritionViewTest):
+class CSVNutritionReportListViewTest(NutritionViewTest):
     url_name = 'csv_nutrition_reports'
     perm_names = [('nutrition', 'view_report')]
 
@@ -176,7 +176,7 @@ class NutritionReportExportViewTest(NutritionViewTest):
         csv = self._extract(response)
         self.assertEquals(len(csv), 1 + len(reports))  # include headers row
 
-        num_columns = 15
+        num_columns = 16
         headers, data = csv[0], csv[1:]
         self.assertEquals(len(headers), num_columns)
         for line in data:
@@ -245,7 +245,7 @@ class NutritionReportExportViewTest(NutritionViewTest):
         response = self._get(get_kwargs={'status': 'bad'}, follow=True)
         correct_url = reverse('nutrition_reports') + '?status=bad'
         self.assertRedirects(response, correct_url)
-        queryset = response.context['reports_table'].data.queryset
+        queryset = response.context['table'].data.queryset
         form = response.context['form']
         self.assertEquals(queryset.count(), 0)
         self.assertTrue('status' in form.errors)

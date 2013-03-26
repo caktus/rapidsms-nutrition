@@ -156,7 +156,7 @@ class ReportFilterForm(forms.Form):
     status = forms.ChoiceField(choices=[('', '')] + Report.STATUSES,
             required=False)
 
-    def get_reports(self, ordering=None):
+    def get_items(self, ordering=None):
         if self.is_valid():
             filters = dict([(k, v) for k, v in self.cleaned_data.iteritems()
                     if v])

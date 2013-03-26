@@ -12,6 +12,7 @@ from nutrition.models import Report
 class NutritionReportTable(tables.Table):
     # Override lots of columns to create better column labels.
     age = tables.Column(verbose_name='Age (Months)')
+    sex = tables.Column()
     reporter_id = tables.Column(verbose_name='Reporter')
     patient_id = tables.Column(verbose_name='Patient')
 
@@ -19,7 +20,7 @@ class NutritionReportTable(tables.Table):
         model = Report
         exclude = ('updated_date', 'global_patient_id', 'global_reporter_id')
         sequence = ('id', 'created_date', 'reporter_id', 'patient_id',
-                'age', 'height', 'weight', 'muac', 'oedema',
+                'age', 'sex', 'height', 'weight', 'muac', 'oedema',
                 'weight4age', 'height4age', 'weight4height', 'status',
                 'active')
 
@@ -41,3 +42,16 @@ class NutritionReportTable(tables.Table):
         if record.patient and record.patient.get('name', None):
             return '{0} ({1})'.format(record.patient['name'], value)
         return value
+
+
+class CSVNutritionReportTable(NutritionReportTable):
+
+    class Meta:
+        model = Report
+        exclude = ('global_patient_id', 'global_reporter_id')
+        sequence = ('id', 'created_date', 'updated_date', 'reporter_id',
+                'patient_id', 'age', 'sex', 'height', 'weight', 'muac',
+                'oedema', 'weight4age', 'height4age', 'weight4height',
+                'status')
+
+
