@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+import logging
 
 from django.utils.translation import ugettext_lazy as _
 
@@ -10,6 +11,9 @@ from nutrition.handlers.base import NutritionHandlerBase
 
 
 __all__ = ['CancelReportHandler']
+
+
+logger = logging.getLogger(__name__)
 
 
 class CancelReportHandler(NutritionHandlerBase, KeywordHandler):
@@ -43,7 +47,7 @@ class CancelReportHandler(NutritionHandlerBase, KeywordHandler):
         form = self._get_form(parsed)
         if not form.is_valid():
             data = {'message': form.error}
-            self.debug('Form error: {message}'.format(**data))
+            logger.error('Form error: {message}'.format(**data))
             self._respond('form_error', **data)
             return
 
@@ -51,16 +55,15 @@ class CancelReportHandler(NutritionHandlerBase, KeywordHandler):
         try:
             self.report = form.cancel()
         except Report.DoesNotExist:
-            self.exception()
+            logger.exception('There is no report to cancel')
             data = {'patient_id': form.cleaned_data['patient_id']}
             self._respond('no_report', **data)
         except Exception as e:
-            self.error('An unexpected error occurred')
-            self.exception()
+            logger.exception('An unexpected processing error occurred')
             self._respond('error')
         else:
             # Send a success message to the reporter.
-            self.debug('Successfully cancelled a report!')
+            logger.debug('Successfully cancelled a report!')
             data = {}
             if form.reporter:  # TODO
                 name = form.reporter.get('name', '')

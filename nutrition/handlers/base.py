@@ -1,10 +1,14 @@
 from __future__ import unicode_literals
+import logging
 import re
 
 from django.utils.translation import ugettext_lazy as _
 
 
 __all__ = ['NutritionHandlerBase']
+
+
+logger = logging.getLogger(__name__)
 
 
 class NutritionHandlerBase(object):
@@ -68,19 +72,19 @@ class NutritionHandlerBase(object):
         """
         # The reporter will be determined from the message connection.
         self.connection = self.msg.connection
-        self.debug('Received {keyword} message from {connection}.'.format(
+        logger.debug('Received {keyword} message from {connection}.'.format(
                 keyword=self._colloquial_keyword(), connection=self.connection))
 
         # Parse the message into its components.
         try:
             parsed = self._parse(text)
         except ValueError as e:
-            self.exception()
+            logger.exception('An exception occurred while parsing the message')
             self._respond('format_error')
             return
         else:
             data = ', '.join([': '.join((k, v)) for k, v in parsed.items()])
-            self.debug('Parsed {keyword} data: {data}'.format(
+            logger.debug('Parsed {keyword} data: {data}'.format(
                     keyword=self._colloquial_keyword(), data=data))
 
         self._process(parsed)  # Subclasses must process parsed data.
