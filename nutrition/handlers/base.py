@@ -32,7 +32,8 @@ class NutritionHandlerBase(object):
         return cls.keyword.split('|')[0]
 
     def _get_form(self, data):
-        return self.form_class(data, connection=self.connection)
+        return self.form_class(data, raw_text=self.raw_text,
+                connection=self.connection)
 
     @classmethod
     def _keyword(cls):
@@ -70,6 +71,7 @@ class NutritionHandlerBase(object):
         Entry point of the handler. This method takes care of a few common
         tasks then calls the subclass-specific process method.
         """
+        self.raw_text = self.msg.text
         # The reporter will be determined from the message connection.
         self.connection = self.msg.connection
         logger.debug('Received {keyword} message from {connection}.'.format(

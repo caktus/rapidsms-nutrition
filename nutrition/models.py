@@ -26,6 +26,7 @@ class Report(models.Model):
     ]
 
     # Meta data.
+    raw_text = models.CharField(max_length=256)
     created_date = models.DateTimeField(auto_now_add=True,
             verbose_name='report date')
     updated_date = models.DateTimeField(auto_now=True)

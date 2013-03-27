@@ -17,6 +17,7 @@ class NutritionFormBase(object):
     def __init__(self, *args, **kwargs):
         # The connection is used to retrieve the reporter.
         self.connection = kwargs.pop('connection')
+        self.raw_text = kwargs.pop('raw_text')
         super(NutritionFormBase, self).__init__(*args, **kwargs)
 
     def clean(self):
@@ -146,6 +147,7 @@ class CreateReportForm(NutritionFormBase, forms.ModelForm):
                     'measurements should be no more than %s digits in length.')
 
     def save(self, *args, **kwargs):
+        self.instance.raw_text = self.raw_text
         self.instance.global_patient_id = self.patient['id']
         return super(CreateReportForm, self).save(*args, **kwargs)
 

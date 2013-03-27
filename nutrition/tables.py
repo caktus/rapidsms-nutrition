@@ -18,7 +18,8 @@ class NutritionReportTable(tables.Table):
 
     class Meta:
         model = Report
-        exclude = ('updated_date', 'global_patient_id', 'global_reporter_id')
+        exclude = ('updated_date', 'global_patient_id', 'global_reporter_id',
+                'raw_text')
         sequence = ('id', 'created_date', 'reporter_id', 'patient_id',
                 'age', 'sex', 'height', 'weight', 'muac', 'oedema',
                 'weight4age', 'height4age', 'weight4height', 'status',
@@ -38,7 +39,7 @@ class CSVNutritionReportTable(NutritionReportTable):
 
     class Meta:
         model = Report
-        exclude = ('global_patient_id', 'global_reporter_id')
+        exclude = ('global_patient_id', 'global_reporter_id', 'raw_text')
         sequence = ('id', 'created_date', 'updated_date', 'reporter_id',
                 'patient_id', 'age', 'sex', 'height', 'weight', 'muac',
                 'oedema', 'weight4age', 'height4age', 'weight4height',
