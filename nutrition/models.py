@@ -34,16 +34,19 @@ class Report(models.Model):
             choices=STATUSES, default=UNANALYZED)
     active = models.BooleanField(default=True)
 
-    # Local identifiers, unique to the nutrition healthcare sources defined in
-    # the project settings.
-    # If source is None, these will be equivalent to the global identifiers.
-    reporter_id = models.CharField(max_length=255, blank=True, null=True)
+    # The local identifier is unique to the nutrition healthcare source
+    # defined in the project settings.
+    # If source is None, this will be equivalent to the global identifier.
     patient_id = models.CharField(max_length=255)
+    global_patient_id = models.CharField(max_length=255)
 
-    # Global identifiers, created by rapidsms-healthcare.
+    # The reporter can usually be gathered from the connection on which the
+    # text message report comes in. However, this field is not required in
+    # case another app wishes to make reports in another way.
+    reporter_connection = models.ForeignKey('rapidsms.Connection', blank=True,
+            null=True)
     global_reporter_id = models.CharField(max_length=255, blank=True,
             null=True)
-    global_patient_id = models.CharField(max_length=255)
 
     # Indicators, gathered from the reporter.
     height = models.DecimalField(max_digits=4, decimal_places=1, blank=True,
@@ -154,29 +157,12 @@ class Report(models.Model):
         self.active = False
         if save:
             self.save()
+        return self
 
     def get_oedema_display(self):
         if self.oedema is None:
             return 'Unknown'
         return 'Yes' if self.oedema else 'No'
-
-    @property
-    def reporter(self):
-        """Retrieves the provider record associated with this report.
-
-        If a caller requires that the provider record actually exist, it must
-        ensure that reporter is not None.
-        """
-        if not hasattr(self, '_reporter'):
-            if not self.global_reporter_id:
-                self._reporter = None
-            else:
-                try:
-                    self._reporter = client.providers.get(
-                            self.global_reporter_id)
-                except ProviderDoesNotExist:
-                    self._reporter = None
-        return self._reporter
 
     @property
     def indicators(self):
@@ -192,7 +178,7 @@ class Report(models.Model):
         """Retrieves the patient record associated with this report.
 
         If a caller requires that the patient record actually exist, it must
-        ensure that patient is not None.
+        ensure that the return value is not None.
         """
         if not hasattr(self, '_patient'):
             try:
@@ -201,18 +187,36 @@ class Report(models.Model):
                 self._patient = None
         return self._patient
 
+    @property
+    def reporter(self):
+        """Retrieves the provider record associated with this report.
+
+        If a caller requires that the provider record actually exist, it must
+        ensure that the return value is not None.
+        """
+        if not hasattr(self, '_reporter'):
+            if not self.global_reporter_id:
+                self._reporter = None
+            else:
+                try:
+                    self._reporter = client.providers.get(
+                            self.global_reporter_id)
+                except ProviderDoesNotExist:
+                    self._reporter = None
+        return self._reporter
+
     def reset_zscores(self, save=True):
         self.weight4age = None
         self.height4age = None
         self.weight4height = None
         if save:
             self.save()
+        return self.zscores
 
     @property
     def sex(self):
         """Returns the patient's sex."""
-        patient = self.patient
-        return patient.get('sex', None) if patient else None
+        return self.patient.get('sex', None) if self.patient else None
 
     @property
     def zscores(self):

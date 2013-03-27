@@ -16,10 +16,10 @@ class Migration(SchemaMigration):
             ('updated_date', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
             ('status', self.gf('django.db.models.fields.CharField')(default=u'U', max_length=1, null=True, blank=True)),
             ('active', self.gf('django.db.models.fields.BooleanField')(default=True)),
-            ('reporter_id', self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True)),
             ('patient_id', self.gf('django.db.models.fields.CharField')(max_length=255)),
-            ('global_reporter_id', self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True)),
             ('global_patient_id', self.gf('django.db.models.fields.CharField')(max_length=255)),
+            ('reporter_connection', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['rapidsms.Connection'], null=True, blank=True)),
+            ('global_reporter_id', self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True)),
             ('height', self.gf('django.db.models.fields.DecimalField')(null=True, max_digits=4, decimal_places=1, blank=True)),
             ('weight', self.gf('django.db.models.fields.DecimalField')(null=True, max_digits=4, decimal_places=1, blank=True)),
             ('muac', self.gf('django.db.models.fields.DecimalField')(null=True, max_digits=4, decimal_places=1, blank=True)),
@@ -50,12 +50,30 @@ class Migration(SchemaMigration):
             'oedema': ('django.db.models.fields.NullBooleanField', [], {'default': 'None', 'null': 'True', 'blank': 'True'}),
             'patient_id': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'raw_text': ('django.db.models.fields.CharField', [], {'max_length': '256', 'null': 'True', 'blank': 'True'}),
-            'reporter_id': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'reporter_connection': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['rapidsms.Connection']", 'null': 'True', 'blank': 'True'}),
             'status': ('django.db.models.fields.CharField', [], {'default': "u'U'", 'max_length': '1', 'null': 'True', 'blank': 'True'}),
             'updated_date': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
             'weight': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '4', 'decimal_places': '1', 'blank': 'True'}),
             'weight4age': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '4', 'decimal_places': '2', 'blank': 'True'}),
             'weight4height': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '4', 'decimal_places': '2', 'blank': 'True'})
+        },
+        u'rapidsms.backend': {
+            'Meta': {'object_name': 'Backend'},
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '20'})
+        },
+        u'rapidsms.connection': {
+            'Meta': {'unique_together': "(('backend', 'identity'),)", 'object_name': 'Connection'},
+            'backend': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['rapidsms.Backend']"}),
+            'contact': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['rapidsms.Contact']", 'null': 'True', 'blank': 'True'}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'identity': ('django.db.models.fields.CharField', [], {'max_length': '100'})
+        },
+        u'rapidsms.contact': {
+            'Meta': {'object_name': 'Contact'},
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'language': ('django.db.models.fields.CharField', [], {'max_length': '6', 'blank': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'})
         }
     }
 
