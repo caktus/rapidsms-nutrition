@@ -30,18 +30,8 @@ class NutritionReportTable(tables.Table):
     def render_created_date(self, value):
         return value.date()
 
-    def render_reporter_id(self, value, record):
-        if record.reporter and record.reporter.get('name', None):
-            return '{0} ({1})'.format(record.reporter['name'], value)
-        return value
-
     def render_oedema(self, record):
         return record.get_oedema_display()
-
-    def render_patient_id(self, value, record):
-        if record.patient and record.patient.get('name', None):
-            return '{0} ({1})'.format(record.patient['name'], value)
-        return value
 
 
 class CSVNutritionReportTable(NutritionReportTable):
