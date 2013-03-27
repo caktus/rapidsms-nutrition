@@ -10,9 +10,9 @@ It allows you to create instant statistical assessments based on WHO Child
 Growth Standards, using the `pygrowup <https://github.com/ewheeler/pygrowup>`_
 library.
 
-This app is based on the work in the `nutrition app
-<https://github.com/mwana/mwana/tree/develop/mwana/apps/nutrition>`_ in Project
-Mwana, which is in turn based on the work in `rapidsms-growth-monitoring
+This app is based on the work in the `Anthrowatch nutrition app
+<https://github.com/mwana/mwana/tree/malawi/release/mwana/apps/nutrition>`_ in
+Project Mwana, which is in turn based on the work in `rapidsms-growth-monitoring
 <https://github.com/ewheeler/rapidsms-growthmonitoring-app>`_ app.
 
 Contents:
