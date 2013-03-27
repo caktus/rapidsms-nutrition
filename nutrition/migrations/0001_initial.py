@@ -11,7 +11,7 @@ class Migration(SchemaMigration):
         # Adding model 'Report'
         db.create_table(u'nutrition_report', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('raw_text', self.gf('django.db.models.fields.CharField')(max_length=256)),
+            ('raw_text', self.gf('django.db.models.fields.CharField')(max_length=256, null=True, blank=True)),
             ('created_date', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
             ('updated_date', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
             ('status', self.gf('django.db.models.fields.CharField')(default=u'U', max_length=1, null=True, blank=True)),
@@ -49,7 +49,7 @@ class Migration(SchemaMigration):
             'muac': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '4', 'decimal_places': '1', 'blank': 'True'}),
             'oedema': ('django.db.models.fields.NullBooleanField', [], {'default': 'None', 'null': 'True', 'blank': 'True'}),
             'patient_id': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
-            'raw_text': ('django.db.models.fields.CharField', [], {'max_length': '256'}),
+            'raw_text': ('django.db.models.fields.CharField', [], {'max_length': '256', 'null': 'True', 'blank': 'True'}),
             'reporter_id': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
             'status': ('django.db.models.fields.CharField', [], {'default': "u'U'", 'max_length': '1', 'null': 'True', 'blank': 'True'}),
             'updated_date': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
