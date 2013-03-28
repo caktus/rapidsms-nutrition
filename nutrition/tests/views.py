@@ -125,9 +125,9 @@ class NutritionReportListViewTest(NutritionViewTest):
 
     def test_filter_patient(self):
         """Reports should be filtered by patient."""
-        params = {'patient': 'hello'}
-        report = self.create_report(patient_id='hello')
+        report = self.create_report()
         other = self.create_report()
+        params = {'patient': report.patient_id}
         response = self._get(get_kwargs=params)
         self.assertEquals(response.status_code, 200)
         queryset, form = self._extract(response)
@@ -177,7 +177,7 @@ class CSVNutritionReportListViewTest(NutritionViewTest):
         csv = self._extract(response)
         self.assertEquals(len(csv), 1 + len(reports))  # include headers row
 
-        num_columns = 16
+        num_columns = 17
         headers, data = csv[0], csv[1:]
         self.assertEquals(len(headers), num_columns)
         for line in data:
@@ -221,9 +221,9 @@ class CSVNutritionReportListViewTest(NutritionViewTest):
 
     def test_filter_patient(self):
         """Reports export should be filtered by patient."""
-        params = {'patient': 'hello'}
-        report = self.create_report(patient_id='hello')
+        report = self.create_report()
         other = self.create_report()
+        params = {'patient': report.patient_id}
         response = self._get(get_kwargs=params)
         self._check_report(response, report)
 

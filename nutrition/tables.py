@@ -14,6 +14,7 @@ class NutritionReportTable(tables.Table):
     age = tables.Column(verbose_name='Age (Months)')
     sex = tables.Column()
     reporter_connection = tables.Column(verbose_name='Reporter')
+    location = tables.Column()
     patient_id = tables.Column(verbose_name='Patient')
 
     class Meta:
@@ -21,7 +22,7 @@ class NutritionReportTable(tables.Table):
         exclude = ('updated_date', 'global_patient_id', 'global_reporter_id',
                 'raw_text')
         sequence = ('id', 'created_date', 'reporter_connection', 'patient_id',
-                'age', 'sex', 'height', 'weight', 'muac', 'oedema',
+                'age', 'sex', 'location', 'height', 'weight', 'muac', 'oedema',
                 'weight4age', 'height4age', 'weight4height', 'status',
                 'active')
 
@@ -41,8 +42,6 @@ class CSVNutritionReportTable(NutritionReportTable):
         model = Report
         exclude = ('global_patient_id', 'global_reporter_id', 'raw_text')
         sequence = ('id', 'created_date', 'updated_date', 'reporter_connection',
-                'patient_id', 'age', 'sex', 'height', 'weight', 'muac',
-                'oedema', 'weight4age', 'height4age', 'weight4height',
+                'patient_id', 'age', 'sex', 'location', 'height', 'weight',
+                'muac', 'oedema', 'weight4age', 'height4age', 'weight4height',
                 'status')
-
-

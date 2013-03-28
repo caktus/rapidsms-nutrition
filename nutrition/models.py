@@ -81,11 +81,10 @@ class Report(models.Model):
         Returns the patient's age at the time of this report, rounded down to
         the nearest full month.
         """
-        if self.patient:
-            birth_date = self.patient.get('birth_date', None)
-            if birth_date:
-                diff = self.created_date.date() - birth_date
-                return int(diff.days / 30.475)
+        birth_date = self.patient.get('birth_date', None)
+        if birth_date:
+            diff = self.created_date.date() - birth_date
+            return int(diff.days / 30.475)
 
     def analyze(self, save=True, calculator=None):
         """Uses pygrowup to calculate z-scores from indicator data.
@@ -174,6 +173,11 @@ class Report(models.Model):
         }
 
     @property
+    def location(self):
+        """Returns the patient's location."""
+        return self.patient.get('location', None)
+
+    @property
     def patient(self):
         """Retrieves the patient record associated with this report.
 
@@ -216,7 +220,7 @@ class Report(models.Model):
     @property
     def sex(self):
         """Returns the patient's sex."""
-        return self.patient.get('sex', None) if self.patient else None
+        return self.patient.get('sex', None)
 
     @property
     def zscores(self):

@@ -1,4 +1,7 @@
-
+.. image::
+    https://secure.travis-ci.org/caktus/rapidsms-nutrition.png?branch=master
+    :alt: Build Status
+        :target: https://secure.travis-ci.org/caktus/rapidsms-nutrition
 
 rapidsms-nutrition
 ==================
