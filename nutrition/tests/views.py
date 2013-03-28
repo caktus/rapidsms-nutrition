@@ -104,8 +104,9 @@ class NutritionReportListViewTest(NutritionViewTest):
 
     def test_filter_reporter(self):
         """Reports should be filtered by reporter."""
-        params = {'reporter_id': 'hello'}
-        report = self.create_report(**params)
+        params = {'reporter': 'hello'}
+        cxn = self.create_connection(data={'identity': 'hello'})
+        report = self.create_report(reporter_connection=cxn)
         other = self.create_report()
         response = self._get(get_kwargs=params)
         self.assertEquals(response.status_code, 200)
@@ -116,7 +117,7 @@ class NutritionReportListViewTest(NutritionViewTest):
     def test_filter_bad_reporter(self):
         """Form does no validation on reporter, but no results returned."""
         report = self.create_report()
-        response = self._get(get_kwargs={'reporter_id': 'bad'})
+        response = self._get(get_kwargs={'reporter': 'bad'})
         self.assertEquals(response.status_code, 200)
         queryset, form = self._extract(response)
         self.assertEquals(queryset.count(), 0)
@@ -124,8 +125,8 @@ class NutritionReportListViewTest(NutritionViewTest):
 
     def test_filter_patient(self):
         """Reports should be filtered by patient."""
-        params = {'patient_id': 'hello'}
-        report = self.create_report(**params)
+        params = {'patient': 'hello'}
+        report = self.create_report(patient_id='hello')
         other = self.create_report()
         response = self._get(get_kwargs=params)
         self.assertEquals(response.status_code, 200)
@@ -136,7 +137,7 @@ class NutritionReportListViewTest(NutritionViewTest):
     def test_filter_bad_patient(self):
         """Form does no validation on patient, but no results returned."""
         report = self.create_report()
-        response = self._get(get_kwargs={'patient_id': 'bad'})
+        response = self._get(get_kwargs={'patient': 'bad'})
         self.assertEquals(response.status_code, 200)
         queryset, form = self._extract(response)
         self.assertEquals(queryset.count(), 0)
@@ -205,8 +206,9 @@ class CSVNutritionReportListViewTest(NutritionViewTest):
 
     def test_filter_reporter(self):
         """Reports export should be filtered by reporter."""
-        params = {'reporter_id': 'hello'}
-        report = self.create_report(**params)
+        params = {'reporter': 'hello'}
+        cxn = self.create_connection(data={'identity': 'hello'})
+        report = self.create_report(reporter_connection=cxn)
         other = self.create_report()
         response = self._get(get_kwargs=params)
         self._check_report(response, report)
@@ -214,13 +216,13 @@ class CSVNutritionReportListViewTest(NutritionViewTest):
     def test_filter_bad_reporter(self):
         """Form does no validation on reporter, but no results returned."""
         report = self.create_report()
-        response = self._get(get_kwargs={'reporter_id': 'bad'})
+        response = self._get(get_kwargs={'reporter': 'bad'})
         self._check_report(response)
 
     def test_filter_patient(self):
         """Reports export should be filtered by patient."""
-        params = {'patient_id': 'hello'}
-        report = self.create_report(**params)
+        params = {'patient': 'hello'}
+        report = self.create_report(patient_id='hello')
         other = self.create_report()
         response = self._get(get_kwargs=params)
         self._check_report(response, report)
@@ -228,7 +230,7 @@ class CSVNutritionReportListViewTest(NutritionViewTest):
     def test_filter_bad_patient(self):
         """Form does no validation on patient, but no results returned."""
         report = self.create_report()
-        response = self._get(get_kwargs={'patient_id': 'bad'})
+        response = self._get(get_kwargs={'patient': 'bad'})
         self._check_report(response)
 
     def test_filter_status(self):

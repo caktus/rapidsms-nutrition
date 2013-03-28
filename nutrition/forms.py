@@ -167,15 +167,25 @@ class CreateReportForm(NutritionFormBase, forms.ModelForm):
 
 
 class ReportFilterForm(forms.Form):
-    patient_id = forms.CharField(label='Patient ID', required=False)
-    reporter_contact = forms.CharField(label='Reporter ID', required=False)
+    patient = forms.CharField(label='Patient ID', required=False)
+    reporter = forms.CharField(label='Reporter Connection', required=False)
     status = forms.ChoiceField(choices=[('', '')] + Report.STATUSES,
             required=False)
 
-    def get_items(self, ordering=None):
+    def _get_filters(self):
         if self.is_valid():
-            filters = dict([(k, v) for k, v in self.cleaned_data.iteritems()
-                    if v])
+            filters = {}
+            if self.cleaned_data['patient']:
+                filters['patient_id'] = self.cleaned_data['patient']
+            if self.cleaned_data['reporter']:
+                filters['reporter_connection__identity'] = self.cleaned_data['reporter']
+            if self.cleaned_data['status']:
+                filters['status'] = self.cleaned_data['status']
+            return filters
+
+    def get_items(self, ordering=None):
+        filters = self._get_filters()
+        if filters is not None:
             if ordering is not None:
                 return Report.objects.filter(**filters).order_by(*ordering)
             return Report.objects.filter(**filters)
