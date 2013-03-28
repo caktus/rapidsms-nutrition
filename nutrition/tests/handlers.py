@@ -16,20 +16,36 @@ from .base import NutritionTestBase
 __all__ = ['CancelReportHandlerTest', 'CreateReportHandlerTest']
 
 
-class CancelReportHandlerTest(NutritionTestBase):
+class NutritionHandlerTestBase(NutritionTestBase):
+    Handler = None
+
+    def setUp(self):
+        super(NutritionHandlerTestBase, self).setUp()
+        self.patient_id = 'asdf'
+        self.patient_id, self.source, self.patient = self.create_patient(
+                self.patient_id)
+        self.backend = self.create_backend()
+        self.reporter = self.create_reporter()
+        self.connection = self.create_connection(data={
+            'backend': self.backend,
+            'contact': self.reporter['contact'],
+        })
+
+    def _send(self, text):
+        msg = IncomingMessage(connection=self.connection, text=text)
+        accepted = self.Handler.dispatch(None, msg)
+        return [m.text for m in msg.responses] if accepted else False
+
+
+class CancelReportHandlerTest(NutritionHandlerTestBase):
     Handler = CancelReportHandler
 
     def setUp(self):
         super(CancelReportHandlerTest, self).setUp()
-        self.patient_id = 'asdf'
-        self.patient_id, self.source, self.patient = self.create_patient(
-                self.patient_id)
         self.report = self.create_report(patient_id=self.patient_id,
                 global_patient_id=self.patient['id'], status='A',
-                analyze=False)
-
-    def _send(self, text):
-        return self.Handler.test(text)
+                reporter_connection=self.connection,
+                global_reporter_id=self.reporter['id'], analyze=False)
 
     def test_wrong_prefix(self):
         """Handler should not reply to an incorrect keyword."""
@@ -155,18 +171,9 @@ class CancelReportHandlerTest(NutritionTestBase):
         self.assertEquals(Report.objects.get().status, Report.ANALYZED)
 
 
-class CreateReportHandlerTest(NutritionTestBase):
+class CreateReportHandlerTest(NutritionHandlerTestBase):
     """Tests for KeywordHandler to add a nutrition report."""
     Handler = CreateReportHandler
-
-    def setUp(self):
-        super(CreateReportHandlerTest, self).setUp()
-        self.patient_id = 'asdf'
-        self.patient_id, self.source, self.patient = self.create_patient(
-                self.patient_id)
-
-    def _send(self, text):
-        return self.Handler.test(text)
 
     def test_wrong_prefix(self):
         """Handler should not reply to an incorrect prefix."""
@@ -249,7 +256,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         report = Report.objects.get()
         self.assertTrue(report.active)
         self.assertEquals(report.patient_id, 'another')
-        self.assertEquals(long(report.global_patient_id), another['id'])
+        self.assertEquals(report.global_patient_id, another['id'])
         self.assertEquals(report.weight, 10)
         self.assertEquals(report.height, 50)
         self.assertEquals(report.muac, 10)
@@ -270,7 +277,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         report = Report.objects.get()
         self.assertTrue(report.active)
         self.assertEquals(report.patient_id, 'another')
-        self.assertEquals(long(report.global_patient_id), another['id'])
+        self.assertEquals(report.global_patient_id, another['id'])
         self.assertEquals(report.weight, 10)
         self.assertEquals(report.height, 50)
         self.assertEquals(report.muac, 10)
@@ -320,7 +327,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         report = Report.objects.get()
         self.assertTrue(report.active)
         self.assertEquals(report.patient_id, 'asdf')
-        self.assertEquals(long(report.global_patient_id), self.patient['id'])
+        self.assertEquals(report.global_patient_id, self.patient['id'])
         self.assertEquals(report.weight, Decimal('10.6'))
         self.assertEquals(report.height, 50)
         self.assertEquals(report.muac, 10)
@@ -348,7 +355,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         report = Report.objects.get()
         self.assertTrue(report.active)
         self.assertEquals(report.patient_id, 'asdf')
-        self.assertEquals(long(report.global_patient_id), self.patient['id'])
+        self.assertEquals(report.global_patient_id, self.patient['id'])
         self.assertEquals(report.weight, None)
         self.assertEquals(report.height, 50)
         self.assertEquals(report.muac, 10)
@@ -365,7 +372,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         report = Report.objects.get()
         self.assertTrue(report.active)
         self.assertEquals(report.patient_id, 'asdf')
-        self.assertEquals(long(report.global_patient_id), self.patient['id'])
+        self.assertEquals(report.global_patient_id, self.patient['id'])
         self.assertEquals(report.weight, None)
         self.assertEquals(report.height, 50)
         self.assertEquals(report.muac, 10)
@@ -403,7 +410,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         report = Report.objects.get()
         self.assertTrue(report.active)
         self.assertEquals(report.patient_id, 'asdf')
-        self.assertEquals(long(report.global_patient_id), self.patient['id'])
+        self.assertEquals(report.global_patient_id, self.patient['id'])
         self.assertEquals(report.weight, 10)
         self.assertEquals(report.height, Decimal('50.6'))
         self.assertEquals(report.muac, 10)
@@ -431,7 +438,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         report = Report.objects.get()
         self.assertTrue(report.active)
         self.assertEquals(report.patient_id, 'asdf')
-        self.assertEquals(long(report.global_patient_id), self.patient['id'])
+        self.assertEquals(report.global_patient_id, self.patient['id'])
         self.assertEquals(report.weight, 10)
         self.assertEquals(report.height, None)
         self.assertEquals(report.muac, 10)
@@ -448,7 +455,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         report = Report.objects.get()
         self.assertTrue(report.active)
         self.assertEquals(report.patient_id, 'asdf')
-        self.assertEquals(long(report.global_patient_id), self.patient['id'])
+        self.assertEquals(report.global_patient_id, self.patient['id'])
         self.assertEquals(report.weight, 10)
         self.assertEquals(report.height, None)
         self.assertEquals(report.muac, 10)
@@ -468,7 +475,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         report = Report.objects.get()
         self.assertTrue(report.active)
         self.assertEquals(report.patient_id, 'asdf')
-        self.assertEquals(long(report.global_patient_id), self.patient['id'])
+        self.assertEquals(report.global_patient_id, self.patient['id'])
         self.assertEquals(report.weight, 10)
         self.assertEquals(report.height, 50)
         self.assertEquals(report.muac, 10)
@@ -506,7 +513,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         report = Report.objects.get()
         self.assertTrue(report.active)
         self.assertEquals(report.patient_id, 'asdf')
-        self.assertEquals(long(report.global_patient_id), self.patient['id'])
+        self.assertEquals(report.global_patient_id, self.patient['id'])
         self.assertEquals(report.weight, 10)
         self.assertEquals(report.height, 50)
         self.assertEquals(report.muac, Decimal('10.6'))
@@ -534,7 +541,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         report = Report.objects.get()
         self.assertTrue(report.active)
         self.assertEquals(report.patient_id, 'asdf')
-        self.assertEquals(long(report.global_patient_id), self.patient['id'])
+        self.assertEquals(report.global_patient_id, self.patient['id'])
         self.assertEquals(report.weight, 10)
         self.assertEquals(report.height, 50)
         self.assertEquals(report.muac, None)
@@ -551,7 +558,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         report = Report.objects.get()
         self.assertTrue(report.active)
         self.assertEquals(report.patient_id, 'asdf')
-        self.assertEquals(long(report.global_patient_id), self.patient['id'])
+        self.assertEquals(report.global_patient_id, self.patient['id'])
         self.assertEquals(report.weight, 10)
         self.assertEquals(report.height, 50)
         self.assertEquals(report.muac, None)
@@ -579,7 +586,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         report = Report.objects.get()
         self.assertTrue(report.active)
         self.assertEquals(report.patient_id, 'asdf')
-        self.assertEquals(long(report.global_patient_id), self.patient['id'])
+        self.assertEquals(report.global_patient_id, self.patient['id'])
         self.assertEquals(report.weight, 10)
         self.assertEquals(report.height, 50)
         self.assertEquals(report.muac, 10)
@@ -596,7 +603,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         report = Report.objects.get()
         self.assertTrue(report.active)
         self.assertEquals(report.patient_id, 'asdf')
-        self.assertEquals(long(report.global_patient_id), self.patient['id'])
+        self.assertEquals(report.global_patient_id, self.patient['id'])
         self.assertEquals(report.weight, 10)
         self.assertEquals(report.height, 50)
         self.assertEquals(report.muac, 10)
@@ -627,7 +634,7 @@ class CreateReportHandlerTest(NutritionTestBase):
         report = Report.objects.get()
         self.assertTrue(report.active)
         self.assertEquals(report.patient_id, 'asdf')
-        self.assertEquals(long(report.global_patient_id), self.patient['id'])
+        self.assertEquals(report.global_patient_id, self.patient['id'])
         self.assertEquals(report.weight, 10)
         self.assertEquals(report.height, 50)
         self.assertEquals(report.muac, 10)

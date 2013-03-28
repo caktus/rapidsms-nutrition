@@ -24,6 +24,7 @@ class NutritionTestBase(RapidTest):
             registry.backend._patients = {}
             registry.backend._patient_ids = {}
             registry.backend._providers = {}
+            registry.backend._provider_contacts = {}
 
     def create_patient(self, patient_id=None, source=None, **kwargs):
         defaults = {
@@ -39,6 +40,14 @@ class NutritionTestBase(RapidTest):
         patient_id = patient_id or self.random_string(25)
         client.patients.link(patient['id'], patient_id, source)
         return patient_id, source, patient
+
+    def create_reporter(self, contact=None, **kwargs):
+        defaults = {
+            'name': self.random_string(25),
+            'contact': contact or self.create_contact(),
+        }
+        defaults.update(**kwargs)
+        return client.providers.create(**defaults)
 
     def create_report(self, analyze=True, **kwargs):
         if 'patient_id' not in kwargs:
