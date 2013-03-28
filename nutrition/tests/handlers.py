@@ -94,7 +94,7 @@ class CancelReportHandlerTest(NutritionHandlerTestBase):
         reply = replies[0]
         self.assertTrue(reply.startswith('Sorry, an error occurred while '\
                 'processing your message: '), reply)
-        self.assertTrue('TODO' in reply, reply)
+        self.assertTrue('You are not registered ' in reply, reply)
         self.assertEquals(Report.objects.count(), 1)
         self.assertTrue(Report.objects.get().active)
         self.assertEquals(Report.objects.get().status, Report.ANALYZED)
@@ -107,7 +107,7 @@ class CancelReportHandlerTest(NutritionHandlerTestBase):
         reply = replies[0]
         self.assertTrue(reply.startswith('Sorry, an error occurred while '\
                 'processing your message: '), reply)
-        self.assertTrue('TODO' in reply, reply)
+        self.assertTrue('You are not registered ' in reply, reply)
         self.assertEquals(Report.objects.count(), 1)
         self.assertTrue(Report.objects.get().active)
         self.assertEquals(Report.objects.get().status, Report.ANALYZED)
@@ -120,7 +120,7 @@ class CancelReportHandlerTest(NutritionHandlerTestBase):
         reply = replies[0]
         self.assertTrue(reply.startswith('Sorry, an error occurred while '\
                 'processing your message: '), reply)
-        self.assertTrue('TODO' in reply, reply)
+        self.assertTrue('You are not registered ' in reply, reply)
         self.assertEquals(Report.objects.count(), 1)
         self.assertTrue(Report.objects.get().active)
         self.assertEquals(Report.objects.get().status, Report.ANALYZED)
@@ -263,7 +263,7 @@ class CreateReportHandlerTest(NutritionHandlerTestBase):
         reply = replies[0]
         self.assertTrue(reply.startswith('Sorry, an error occurred while '\
                 'processing your message: '), reply)
-        self.assertTrue('TODO' in reply, reply)
+        self.assertTrue('You are not registered ' in reply, reply)
         self.assertEquals(Report.objects.count(), 0)
 
     def test_no_contact(self):
@@ -275,7 +275,7 @@ class CreateReportHandlerTest(NutritionHandlerTestBase):
         reply = replies[0]
         self.assertTrue(reply.startswith('Sorry, an error occurred while '\
                 'processing your message: '), reply)
-        self.assertTrue('TODO' in reply, reply)
+        self.assertTrue('You are not registered ' in reply, reply)
         self.assertEquals(Report.objects.count(), 0)
 
     def test_inactive_reporter(self):
@@ -286,7 +286,7 @@ class CreateReportHandlerTest(NutritionHandlerTestBase):
         reply = replies[0]
         self.assertTrue(reply.startswith('Sorry, an error occurred while '\
                 'processing your message: '), reply)
-        self.assertTrue('TODO' in reply, reply)
+        self.assertTrue('You are not registered ' in reply, reply)
         self.assertEquals(Report.objects.count(), 0)
 
 

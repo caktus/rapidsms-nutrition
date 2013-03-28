@@ -17,7 +17,17 @@ class NutritionFormBase(object):
     def __init__(self, *args, **kwargs):
         self.connection = kwargs.pop('connection', None)
         self.raw_text = kwargs.pop('raw_text', None)
+
+        if 'error_class' not in kwargs:
+            kwargs['error_class'] = PlainErrorList
+
         super(NutritionFormBase, self).__init__(*args, **kwargs)
+
+    def _update_field_messages(self, messages):
+        for field_name in messages:
+            for msg_type in self.fields[field_name].error_messages:
+                field = self.fields[field_name]
+                field.error_messages[msg_type] = messages[field_name]
 
     def clean(self):
         self.clean_connection()  # Do this before attempting further cleaning.
@@ -28,13 +38,13 @@ class NutritionFormBase(object):
         if self.connection:
             contact = self.connection.contact
             if not contact:
-                raise forms.ValidationError('TODO')
+                raise forms.ValidationError(self.messages.get('connection', ''))
             try:
                 reporter = client.providers.get_by_contact(contact)
             except ProviderDoesNotExist:
-                raise forms.ValidationError('TODO')
+                raise forms.ValidationError(self.messages.get('connection', ''))
             if reporter['status'] != 'A':
-                raise forms.ValidationError('TODO')
+                raise forms.ValidationError(self.messages.get('connection', ''))
             self.reporter = reporter
             return self.connection
 
@@ -70,23 +80,22 @@ class CancelReportForm(NutritionFormBase, forms.Form):
     patient_id = forms.CharField()
 
     def __init__(self, *args, **kwargs):
-        # Descriptive error messages.
-        self.messages = {
+        # Descriptive error messages for form fields.
+        field_messages = {
             'patient_id': _('Nutrition reports must be for a patient who is '
                     'registered and active.'),
         }
-        self.messages.update(kwargs.pop('messages', {}))
+        field_messages.update(kwargs.pop('field_messages', {}))
 
-        if 'error_class' not in kwargs:
-            kwargs['error_class'] = PlainErrorList
+        # Descriptive error messages for specific non-field errors.
+        self.messages = {
+            'connection': 'You are not registered as a nutrition reporter.',
+        }
 
         super(CancelReportForm, self).__init__(*args, **kwargs)
 
-        # Set the error messages.
-        for field_name in self.messages:
-            for msg_type in self.fields[field_name].error_messages:
-                field = self.fields[field_name]
-                field.error_messages[msg_type] = self.messages[field_name]
+        # Set custom field messages.
+        self._update_field_messages(field_messages)
 
     def cancel(self):
         """Cancels the patient's most recently created report.
@@ -126,8 +135,8 @@ class CreateReportForm(NutritionFormBase, forms.ModelForm):
         fields = ('patient_id', 'weight', 'height', 'muac', 'oedema')
 
     def __init__(self, *args, **kwargs):
-        # Descriptive field error messages.
-        self.messages = {
+        # Descriptive error messages for form fields.
+        field_messages = {
             'patient_id': _('Nutrition reports must be for a patient who '
                     'is registered and active.'),
             'weight': _('Please send a positive value (in kg) for weight.'),
@@ -137,18 +146,17 @@ class CreateReportForm(NutritionFormBase, forms.ModelForm):
             'oedema': _('Please send Y or N to indicate whether the patient '
                     'has oedema.'),
         }
-        self.messages.update(kwargs.pop('messages', {}))
+        field_messages.update(kwargs.pop('field_messages', {}))
 
-        if 'error_class' not in kwargs:
-            kwargs['error_class'] = PlainErrorList
+        # Descriptive error messages for specific non-field errors.
+        self.messages = {
+            'connection': 'You are not registered as a nutrition reporter.',
+        }
 
         super(CreateReportForm, self).__init__(*args, **kwargs)
 
-        # Set the error messages.
-        for field_name in self.messages:
-            for msg_type in self.fields[field_name].error_messages:
-                field = self.fields[field_name]
-                field.error_messages[msg_type] = self.messages[field_name]
+        # Set custom field messages.
+        self._update_field_messages(field_messages)
 
         # Add more specific sizing messages.
         for field_name in ('weight', 'height', 'muac'):
