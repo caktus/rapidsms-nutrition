@@ -31,8 +31,9 @@ class NutritionHandlerTestBase(NutritionTestBase):
             'contact': self.reporter['contact'],
         })
 
-    def _send(self, text):
-        msg = IncomingMessage(connection=self.connection, text=text)
+    def _send(self, text, connection=None):
+        msg = IncomingMessage(connection=connection or self.connection,
+                text=text)
         accepted = self.Handler.dispatch(None, msg)
         return [m.text for m in msg.responses] if accepted else False
 
@@ -87,11 +88,42 @@ class CancelReportHandlerTest(NutritionHandlerTestBase):
 
     def test_unregistered_reporter(self):
         """Reporter must be registered."""
-        pass  # TODO
+        client.providers.delete(self.reporter['id'])
+        replies = self._send('nutrition cancel asdf')
+        self.assertEquals(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('Sorry, an error occurred while '\
+                'processing your message: '), reply)
+        self.assertTrue('TODO' in reply, reply)
+        self.assertEquals(Report.objects.count(), 1)
+        self.assertTrue(Report.objects.get().active)
+        self.assertEquals(Report.objects.get().status, Report.ANALYZED)
+
+    def test_no_contact(self):
+        """Reporter must be associated with a RapidSMS contact."""
+        other_connection = self.create_connection()
+        replies = self._send('nutrition cancel asdf', other_connection)
+        self.assertEquals(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('Sorry, an error occurred while '\
+                'processing your message: '), reply)
+        self.assertTrue('TODO' in reply, reply)
+        self.assertEquals(Report.objects.count(), 1)
+        self.assertTrue(Report.objects.get().active)
+        self.assertEquals(Report.objects.get().status, Report.ANALYZED)
 
     def test_inactive_reporter(self):
         """Reporter must be active."""
-        pass  # TODO
+        client.providers.update(self.reporter['id'], status='I')
+        replies = self._send('nutrition cancel asdf')
+        self.assertEquals(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('Sorry, an error occurred while '\
+                'processing your message: '), reply)
+        self.assertTrue('TODO' in reply, reply)
+        self.assertEquals(Report.objects.count(), 1)
+        self.assertTrue(Report.objects.get().active)
+        self.assertEquals(Report.objects.get().status, Report.ANALYZED)
 
     def test_unregistered_patient(self):
         """Report patient must be registered."""
@@ -225,11 +257,38 @@ class CreateReportHandlerTest(NutritionHandlerTestBase):
 
     def test_unregistered_reporter(self):
         """Reporter must be registered."""
-        pass  # TODO
+        client.providers.delete(self.reporter['id'])
+        replies = self._send('nutrition report asdf w 10 h 50 m 10 o Y')
+        self.assertEquals(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('Sorry, an error occurred while '\
+                'processing your message: '), reply)
+        self.assertTrue('TODO' in reply, reply)
+        self.assertEquals(Report.objects.count(), 0)
+
+    def test_no_contact(self):
+        """Reporter must be associated with a RapidSMS contact."""
+        other_connection = self.create_connection()
+        replies = self._send('nutrition report asdf w 10 h 50 m 10 o Y',
+                other_connection)
+        self.assertEquals(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('Sorry, an error occurred while '\
+                'processing your message: '), reply)
+        self.assertTrue('TODO' in reply, reply)
+        self.assertEquals(Report.objects.count(), 0)
 
     def test_inactive_reporter(self):
         """Reporter must be active."""
-        pass  # TODO
+        client.providers.update(self.reporter['id'], status='I')
+        replies = self._send('nutrition report asdf w 10 h 50 m 10 o Y')
+        self.assertEquals(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue(reply.startswith('Sorry, an error occurred while '\
+                'processing your message: '), reply)
+        self.assertTrue('TODO' in reply, reply)
+        self.assertEquals(Report.objects.count(), 0)
+
 
     def test_unregistered_patient(self):
         """Report patient must be registered."""
