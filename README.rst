@@ -1,5 +1,10 @@
-rapidsms-nutrition [![Build Status](https://secure.travis-ci.org/caktus/rapidsms-nutrition.png)](http://travis-ci.org/caktus/rapidsms-nutrition)
-================================================================================================================================================
+.. image::
+    https://secure.travis-ci.org/caktus/rapidsms-nutrition.png?branch=master
+    :alt: Build Status
+        :target: https://secure.travis-ci.org/caktus/rapidsms-nutrition
+
+rapidsms-nutrition
+==================
 
 Welcome to the documentation for rapidsms-nutrition!
 
