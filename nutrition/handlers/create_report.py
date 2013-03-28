@@ -107,11 +107,10 @@ class CreateReportHandler(NutritionHandlerBase, KeywordHandler):
             # Send a success message to the reporter.
             logger.debug('Successfully created a new report!')
             data = self.report.indicators
-            if self.report.reporter:
-                name = self.report.reporter.get('name', '')
-                data['reporter'] = name or self.report.reporter['id']
+            if self.report.reporter_connection:
+                data['reporter'] = self.report.reporter_connection.contact
             else:
-                data['reporter'] = 'anonymous'  # TODO
+                data['reporter'] = 'Anonymous'
             data['patient'] = self.report.patient.get('name', '')
             data['patient_id'] = self.report.patient_id
             self._respond('success', **data)

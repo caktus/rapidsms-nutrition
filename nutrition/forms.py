@@ -15,9 +15,8 @@ from nutrition.fields import NullDecimalField, NullYesNoField, PlainErrorList
 class NutritionFormBase(object):
 
     def __init__(self, *args, **kwargs):
-        # The connection is used to retrieve the reporter.
-        self.connection = kwargs.pop('connection')
-        self.raw_text = kwargs.pop('raw_text')
+        self.connection = kwargs.pop('connection', None)
+        self.raw_text = kwargs.pop('raw_text', None)
         super(NutritionFormBase, self).__init__(*args, **kwargs)
 
     def clean(self):
@@ -26,7 +25,18 @@ class NutritionFormBase(object):
 
     def clean_connection(self):
         """Validate that the reporter is registered and active."""
-        self.reporter = None  # TODO
+        if self.connection:
+            contact = self.connection.contact
+            if not contact:
+                raise forms.ValidationError('TODO')
+            try:
+                reporter = client.providers.get_by_contact(contact)
+            except ProviderDoesNotExist:
+                raise forms.ValidationError('TODO')
+            if reporter['status'] != 'A':
+                raise forms.ValidationError('TODO')
+            self.reporter = reporter
+            return self.connection
 
     def clean_patient_id(self):
         """Validate that the patient is registered and active."""
@@ -149,12 +159,16 @@ class CreateReportForm(NutritionFormBase, forms.ModelForm):
     def save(self, *args, **kwargs):
         self.instance.raw_text = self.raw_text
         self.instance.global_patient_id = self.patient['id']
+        if self.connection:
+            self.instance.reporter_connection = self.connection
+        if self.reporter:
+            self.instance.global_reporter_id = self.reporter['id']
         return super(CreateReportForm, self).save(*args, **kwargs)
 
 
 class ReportFilterForm(forms.Form):
     patient_id = forms.CharField(label='Patient ID', required=False)
-    reporter_id = forms.CharField(label='Reporter ID', required=False)
+    reporter_contact = forms.CharField(label='Reporter ID', required=False)
     status = forms.ChoiceField(choices=[('', '')] + Report.STATUSES,
             required=False)
 

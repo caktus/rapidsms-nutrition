@@ -65,11 +65,10 @@ class CancelReportHandler(NutritionHandlerBase, KeywordHandler):
             # Send a success message to the reporter.
             logger.debug('Successfully cancelled a report!')
             data = {}
-            if form.reporter:  # TODO
-                name = form.reporter.get('name', '')
-                data['reporter'] = name or form.reporter['id']
+            if self.report.reporter_connection:
+                data['reporter'] = self.report.reporter_connection.contact
             else:
-                data['reporter'] = 'anonymous'
+                data['reporter'] = 'Anonymous'
             data['patient'] = form.patient.get('name', '')
             data['patient_id'] = form.patient['id']
             self._respond('success', **data)
