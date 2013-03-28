@@ -98,21 +98,22 @@ class CancelReportForm(NutritionFormBase, forms.Form):
         self._update_field_messages(field_messages)
 
     def cancel(self):
-        """Cancels the patient's most recently created report.
+        """Cancels the patient's most recent report. If self.connection is
+        given, then the reports are filtered to only those made by connections
+        of the Contact associated with self.connection.
 
         Raises Report.DoesNotExist if the patient has no reports.
         """
-        # TODO: filter to only reports created by our connection, to
-        # prevent a text-message race condition.
-
         # We do not filter on report status. It is possible that the most
         # recent report is already cancelled, but that's okay for now because
         # this feature is not intended to allow reporters to cancel all
         # reports to the beginning of time.
-        patient_id = self.cleaned_data['patient_id']
+        filters = {'patient_id': self.cleaned_data['patient_id']}
+        if self.connection:
+            cxns = self.connection.contact.connection_set.all()
+            filters['reporter_connection__in'] = cxns
         # Report.DoesNotExist should be handled by the caller.
-        report = Report.objects.filter(patient_id=patient_id)\
-                                .latest('created_date')
+        report = Report.objects.filter(**filters).latest('created_date')
         report.cancel()
         return report
 

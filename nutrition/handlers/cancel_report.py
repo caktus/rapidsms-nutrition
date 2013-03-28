@@ -27,8 +27,8 @@ class CancelReportHandler(NutritionHandlerBase, KeywordHandler):
         'success': _('Thanks {reporter}. The most recent nutrition report for '
                 '{patient} ({patient_id}) has been cancelled.'),
 
-        'no_report': _('Sorry, {patient_id} does not have any reports in the '
-                'system.'),
+        'no_report': _('Sorry, you have not made any reports for '
+                '{patient_id}.'),
 
         'format_error': _('Sorry, the system could not understand whose '
                 'report you would like to cancel. To cancel the most recent '

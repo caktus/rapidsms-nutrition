@@ -158,7 +158,8 @@ class CancelReportHandlerTest(NutritionHandlerTestBase):
         replies = self._send('nutrition cancel asdf')
         self.assertEquals(len(replies), 1)
         reply = replies[0]
-        self.assertTrue('Sorry, asdf does not have any ' in reply, reply)
+        self.assertTrue('Sorry, you have not made any reports for asdf' in
+                reply, reply)
         self.assertEquals(Report.objects.count(), 0)
 
     def test_no_uncancelled_reports(self):
@@ -172,11 +173,28 @@ class CancelReportHandlerTest(NutritionHandlerTestBase):
         self.assertFalse(Report.objects.get().active)
         self.assertEquals(Report.objects.get().status, Report.ANALYZED)
 
+    def test_no_reports_for_this_connection(self):
+        """Handler should not cancel reports for another connection."""
+        other_reporter = self.create_reporter()
+        other_connection = self.create_connection(data={
+            'backend': self.backend,
+            'contact': other_reporter['contact'],
+        })
+        replies = self._send('nutrition cancel asdf', other_connection)
+        self.assertEquals(len(replies), 1)
+        reply = replies[0]
+        self.assertTrue('Sorry, you have not made any reports for asdf' in
+                reply, reply)
+        self.assertEquals(Report.objects.count(), 1)
+        self.assertTrue(Report.objects.get().active)
+        self.assertEquals(Report.objects.get().status, Report.ANALYZED)
+
     def test_cancel_latest_report(self):
         """Handler should cancel the patient's most recent report."""
         self.report2 = self.create_report(patient_id=self.patient_id,
                 global_patient_id=self.patient['id'], status='A',
-                analyze=False)
+                analyze=False, reporter_connection=self.connection,
+                global_reporter_id=self.reporter['id'])
         replies = self._send('nutrition cancel asdf')
         self.assertEquals(len(replies), 1)
         reply = replies[0]
