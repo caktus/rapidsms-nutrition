@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
-import csv
 import re
+
+from nutrition.unicsv import UnicodeCSVWriter
 
 from django.contrib.auth.decorators import permission_required
 from django.core.urlresolvers import reverse
@@ -70,22 +71,17 @@ class CSVNutritionReportList(NutritionReportMixin, View):
         response = HttpResponse(content_type='text/csv')
         content_disposition = 'attachment; filename=%s.csv' % self.filename
         response['Content-Disposition'] = content_disposition
-        writer = csv.writer(response)
-        for row in self.get_data():
-            writer.writerow(row)
+        writer = UnicodeCSVWriter(response)
+        writer.writerows(self.get_rows())
         return response
 
-    def get_data(self):
+    def get_rows(self):
         table = self.get_table()
         headers = [col.title() for col in table.columns.names()]
         rows = [headers]
         for item in table.rows:
             row = []
             for cell in item:
-                try:
-                    # Replace emdash with empty string
-                    row.append(cell.replace(u'\u2014', ''))
-                except:
-                    row.append(cell)
+                row.append(cell)
             rows.append(row)
         return rows
