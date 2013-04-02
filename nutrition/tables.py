@@ -19,9 +19,9 @@ class NutritionReportTable(tables.Table):
 
     class Meta:
         model = Report
-        exclude = ('updated_date', 'global_patient_id', 'global_reporter_id',
+        exclude = ('updated', 'global_patient_id', 'global_reporter_id',
                 'raw_text')
-        sequence = ('id', 'created_date', 'reporter_id', 'patient_id',
+        sequence = ('id', 'created', 'reporter_id', 'patient_id',
                 'age', 'sex', 'location', 'height', 'weight', 'muac', 'oedema',
                 'weight4age', 'height4age', 'weight4height', 'status',
                 'active')
@@ -29,7 +29,7 @@ class NutritionReportTable(tables.Table):
     def render_active(self, value):
         return 'Active' if value else 'Cancelled'
 
-    def render_created_date(self, value):
+    def render_created(self, value):
         return value.date()
 
     def render_oedema(self, record):
@@ -41,7 +41,7 @@ class CSVNutritionReportTable(NutritionReportTable):
     class Meta:
         model = Report
         exclude = ('global_patient_id', 'global_reporter_id', 'raw_text')
-        sequence = ('id', 'created_date', 'updated_date', 'reporter_id',
+        sequence = ('id', 'created', 'updated', 'reporter_id',
                 'patient_id', 'age', 'sex', 'location', 'height', 'weight',
                 'muac', 'oedema', 'weight4age', 'height4age', 'weight4height',
                 'status')

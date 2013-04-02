@@ -26,10 +26,10 @@ class Report(models.Model):
     ]
 
     # Meta data.
-    raw_text = models.CharField(max_length=256, null=True, blank=True)
-    created_date = models.DateTimeField(auto_now_add=True,
+    raw_text = models.CharField(max_length=255, null=True, blank=True)
+    created = models.DateTimeField(auto_now_add=True,
             verbose_name='report date')
-    updated_date = models.DateTimeField(auto_now=True)
+    updated = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=1, blank=True, null=True,
             choices=STATUSES, default=UNANALYZED)
     active = models.BooleanField(default=True)
@@ -70,7 +70,7 @@ class Report(models.Model):
 
     def __unicode__(self):
         return 'Patient {0} on {1}'.format(self.patient_id,
-                self.created_date.date())
+                self.created.date())
 
     @property
     def age(self):
@@ -80,7 +80,7 @@ class Report(models.Model):
         """
         birth_date = self.patient.get('birth_date', None)
         if birth_date:
-            diff = self.created_date.date() - birth_date
+            diff = self.created.date() - birth_date
             return int(diff.days / 30.475)
 
     def analyze(self, save=True, calculator=None):

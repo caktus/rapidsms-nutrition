@@ -17,7 +17,7 @@ from nutrition.tables import NutritionReportTable, CSVNutritionReportTable
 
 class NutritionReportMixin(object):
     """Allow filtering by patient, reporter, and status."""
-    ordering = ['-created_date']  # Default order in which to display reports.
+    ordering = ['-created']  # Default order in which to display reports.
 
     @method_decorator(permission_required('nutrition.view_report'))
     def dispatch(self, request, *args, **kwargs):

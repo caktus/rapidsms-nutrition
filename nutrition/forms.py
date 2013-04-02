@@ -93,7 +93,7 @@ class CancelReportForm(NutritionFormBase, forms.Form):
         patient_id = self.cleaned_data['patient_id']
         # Report.DoesNotExist should be handled by the caller.
         report = Report.objects.filter(patient_id=patient_id)\
-                                .latest('created_date')
+                                .latest('created')
         report.cancel()
         return report
 
