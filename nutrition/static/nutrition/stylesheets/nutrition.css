@@ -1,4 +1,4 @@
-form#filter-form input, form#filter-form select {
+form#filter-form input[type=text], form#filter-form select {
     /* Same as bootstrap's input-block-level */
     display: block;
     width: 100%;
