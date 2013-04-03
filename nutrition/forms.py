@@ -158,10 +158,9 @@ class ReportFilterForm(forms.Form):
     status = forms.ChoiceField(choices=[('', '')] + Report.STATUSES,
             required=False)
 
-    def get_items(self, ordering=None):
+    def get_items(self):
         if self.is_valid():
             filters = dict([(k, v) for k, v in self.cleaned_data.iteritems()
                     if v])
-            if ordering is not None:
-                return Report.objects.filter(**filters).order_by(*ordering)
             return Report.objects.filter(**filters)
+        return Report.objects.none()
