@@ -1,8 +1,4 @@
 from __future__ import unicode_literals
-from urllib import urlencode
-
-from django.core.urlresolvers import reverse
-from django.utils.safestring import mark_safe
 
 import django_tables2 as tables
 
@@ -11,9 +7,9 @@ from nutrition.models import Report
 
 class NutritionReportTable(tables.Table):
     # Override lots of columns to create better column labels.
-    age = tables.Column(verbose_name='Age (Months)')
-    sex = tables.Column()
-    location = tables.Column()
+    age = tables.Column(verbose_name='Age (Months)', orderable=False)
+    sex = tables.Column(orderable=False)
+    location = tables.Column(orderable=False)
     reporter_id = tables.Column(verbose_name='Reporter')
     patient_id = tables.Column(verbose_name='Patient')
 
