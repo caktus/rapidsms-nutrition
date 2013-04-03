@@ -56,11 +56,11 @@ class Report(models.Model):
 
     # Nutrition z-scores, calcuated from indicators.
     weight4age = models.DecimalField(max_digits=4, decimal_places=2,
-            blank=True, null=True)
+            blank=True, null=True, verbose_name='Weight for Age')
     height4age = models.DecimalField(max_digits=4, decimal_places=2,
-            blank=True, null=True)
+            blank=True, null=True, verbose_name='Height for Age')
     weight4height = models.DecimalField(max_digits=4, decimal_places=2,
-            blank=True, null=True)
+            blank=True, null=True, verbose_name='Weight for Height')
 
     class Meta:
         permissions = (
