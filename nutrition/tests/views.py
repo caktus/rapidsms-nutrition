@@ -1,5 +1,8 @@
 from __future__ import unicode_literals
 from urllib import urlencode
+from cStringIO import StringIO
+
+from nutrition.unicsv import UnicodeCSVReader
 
 from django.contrib.auth.models import Permission
 from django.core.urlresolvers import reverse
@@ -169,8 +172,8 @@ class CSVNutritionReportListViewTest(NutritionViewTest):
     perm_names = [('nutrition', 'view_report')]
 
     def _extract(self, response):
-        content = response.content.strip()
-        return [line.split(',') for line in content.split('\r\n')]
+        reader = UnicodeCSVReader(StringIO(response.content))
+        return [line for line in reader]
 
     def _check_report(self, response, *reports):
         self.assertEquals(response.status_code, 200)

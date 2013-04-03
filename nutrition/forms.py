@@ -113,7 +113,7 @@ class CancelReportForm(NutritionFormBase, forms.Form):
             cxns = self.connection.contact.connection_set.all()
             filters['reporter_connection__in'] = cxns
         # Report.DoesNotExist should be handled by the caller.
-        report = Report.objects.filter(**filters).latest('created_date')
+        report = Report.objects.filter(**filters).latest('created')
         report.cancel()
         return report
 
