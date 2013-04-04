@@ -157,10 +157,38 @@ class ReportFilterForm(forms.Form):
     reporter_id = forms.CharField(label='Reporter ID', required=False)
     status = forms.ChoiceField(choices=[('', '')] + Report.STATUSES,
             required=False)
+    start_date = forms.DateField(required=False)
+    end_date = forms.DateField(required=False)
+
+    def clean(self):
+        cleaned_data = super(ReportFilterForm, self).clean()
+        start_date = cleaned_data.get('start_date', None)
+        end_date = cleaned_data.get('end_date', None)
+        if start_date and end_date:
+            if end_date < start_date:
+                raise forms.ValidationError('Start date must be before end date.')
+        return cleaned_data
+
+    def _get_filters(self):
+        if self.is_valid():
+            filters = {}
+            if self.cleaned_data['patient_id']:
+                filters['patient_id'] = self.cleaned_data['patient_id']
+            if self.cleaned_data['reporter_id']:
+                filters['reporter_id'] = self.cleaned_data['reporter_id']
+            if self.cleaned_data['status']:
+                filters['status'] = self.cleaned_data['status']
+
+            # Add the date filters. Since no specific times are involved, we
+            # make both sides inclusive.
+            if self.cleaned_data['start_date']:
+                filters['data_date__gte'] = self.cleaned_data['start_date']
+            if self.cleaned_data['end_date']:
+                filters['data_date__lte'] = self.cleaned_data['end_date']
+            return filters
 
     def get_items(self):
-        if self.is_valid():
-            filters = dict([(k, v) for k, v in self.cleaned_data.iteritems()
-                    if v])
+        filters = self._get_filters()
+        if filters is not None:
             return Report.objects.filter(**filters)
         return Report.objects.none()

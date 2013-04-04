@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
-from urllib import urlencode
 from cStringIO import StringIO
+import datetime
+from urllib import urlencode
 
 from nutrition.unicsv import UnicodeCSVReader
 
@@ -165,6 +166,68 @@ class NutritionReportListViewTest(NutritionViewTest):
         self.assertEquals(queryset.count(), 0)
         self.assertTrue('status' in form.errors)
 
+    def test_filter_start_date(self):
+        """Reports should be filtered by start date."""
+        report1 = self.create_report(data_date=datetime.date(2010, 1, 3))
+        report2 = self.create_report(data_date=datetime.date(2010, 1, 5))
+        response = self._get(get_kwargs={'start_date': '01/04/2010'})
+        self.assertEquals(response.status_code, 200)
+        queryset, form = self._extract(response)
+        self.assertEquals(queryset.count(), 1)
+        self.assertEquals(queryset.get(), report2)
+
+    def test_filter_bad_start_date(self):
+        """Form has error & no results returned if start date is invalid."""
+        report = self.create_report(data_date=datetime.date(2010, 1, 3))
+        response = self._get(get_kwargs={'start_date': 'bad_date'})
+        self.assertEquals(response.status_code, 200)
+        queryset, form = self._extract(response)
+        self.assertEquals(queryset.count(), 0)
+        self.assertTrue('start_date' in form.errors)
+
+    def test_filter_end_date(self):
+        """Reports should be filtered by end date."""
+        report1 = self.create_report(data_date=datetime.date(2010, 1, 3))
+        report2 = self.create_report(data_date=datetime.date(2010, 1, 5))
+        response = self._get(get_kwargs={'end_date': '01/04/2010'})
+        self.assertEquals(response.status_code, 200)
+        queryset, form = self._extract(response)
+        self.assertEquals(queryset.count(), 1)
+        self.assertEquals(queryset.get(), report1)
+
+    def test_filter_bad_end_date(self):
+        """Form has error & no results returned if end date is invalid."""
+        report = self.create_report(data_date=datetime.date(2010, 1, 3))
+        response = self._get(get_kwargs={'end_date': 'bad_date'})
+        self.assertEquals(response.status_code, 200)
+        queryset, form = self._extract(response)
+        self.assertEquals(queryset.count(), 0)
+        self.assertTrue('end_date' in form.errors)
+
+    def test_filter_date_range(self):
+        """Reports should be filtered by date range."""
+        report1 = self.create_report(data_date=datetime.date(2010, 1, 1))
+        report2 = self.create_report(data_date=datetime.date(2010, 1, 3))
+        report3 = self.create_report(data_date=datetime.date(2010, 1, 5))
+        response = self._get(get_kwargs={'start_date': '01/02/2010',
+                'end_date': '01/04/2010'})
+        self.assertEquals(response.status_code, 200)
+        queryset, form = self._extract(response)
+        self.assertEquals(queryset.count(), 1)
+        self.assertEquals(queryset.get(), report2)
+
+    def test_filter_bad_date_range(self):
+        """Form has error & no results returned if date range is invalid."""
+        report1 = self.create_report(data_date=datetime.date(2010, 1, 1))
+        report2 = self.create_report(data_date=datetime.date(2010, 1, 3))
+        report3 = self.create_report(data_date=datetime.date(2010, 1, 5))
+        response = self._get(get_kwargs={'start_date': '01/04/2010',
+                'end_date': '01/02/2010'})  # reversed
+        self.assertEquals(response.status_code, 200)
+        queryset, form = self._extract(response)
+        self.assertEquals(queryset.count(), 0)
+        self.assertTrue(form.non_field_errors())
+
 
 class CSVNutritionReportListViewTest(NutritionViewTest):
     url_name = 'csv_nutrition_reports'
@@ -252,3 +315,68 @@ class CSVNutritionReportListViewTest(NutritionViewTest):
         form = response.context['form']
         self.assertEquals(queryset.count(), 0)
         self.assertTrue('status' in form.errors)
+
+    def test_filter_start_date(self):
+        """Reports should be filtered by start date."""
+        report1 = self.create_report(data_date=datetime.date(2010, 1, 3))
+        report2 = self.create_report(data_date=datetime.date(2010, 1, 5))
+        response = self._get(get_kwargs={'start_date': '01/04/2010'})
+        self.assertEquals(response.status_code, 200)
+        self._check_report(response, report2)
+
+    def test_filter_bad_start_date(self):
+        """Form has error & no results returned if start date is invalid."""
+        report = self.create_report(data_date=datetime.date(2010, 1, 3))
+        response = self._get(get_kwargs={'start_date': 'bad_date'},
+                follow=True)
+        correct_url = reverse('nutrition_reports') + '?start_date=bad_date'
+        self.assertRedirects(response, correct_url)
+        queryset = response.context['table'].data.queryset
+        form = response.context['form']
+        self.assertEquals(queryset.count(), 0)
+        self.assertTrue('start_date' in form.errors)
+
+    def test_filter_end_date(self):
+        """Reports should be filtered by end date."""
+        report1 = self.create_report(data_date=datetime.date(2010, 1, 3))
+        report2 = self.create_report(data_date=datetime.date(2010, 1, 5))
+        response = self._get(get_kwargs={'end_date': '01/04/2010'})
+        self.assertEquals(response.status_code, 200)
+        self._check_report(response, report1)
+
+    def test_filter_bad_end_date(self):
+        """Form has error & no results returned if end date is invalid."""
+        report = self.create_report(data_date=datetime.date(2010, 1, 3))
+        response = self._get(get_kwargs={'end_date': 'bad_date'},
+                follow=True)
+        correct_url = reverse('nutrition_reports') + '?end_date=bad_date'
+        self.assertRedirects(response, correct_url)
+        queryset = response.context['table'].data.queryset
+        form = response.context['form']
+        self.assertEquals(queryset.count(), 0)
+        self.assertTrue('end_date' in form.errors)
+
+    def test_filter_date_range(self):
+        """Reports should be filtered by date range."""
+        report1 = self.create_report(data_date=datetime.date(2010, 1, 1))
+        report2 = self.create_report(data_date=datetime.date(2010, 1, 3))
+        report3 = self.create_report(data_date=datetime.date(2010, 1, 5))
+        response = self._get(get_kwargs={'start_date': '01/02/2010',
+                'end_date': '01/04/2010'})
+        self._check_report(response, report2)
+
+    def test_filter_bad_date_range(self):
+        """Form has error & no results returned if date range is invalid."""
+        report1 = self.create_report(data_date=datetime.date(2010, 1, 1))
+        report2 = self.create_report(data_date=datetime.date(2010, 1, 3))
+        report3 = self.create_report(data_date=datetime.date(2010, 1, 5))
+        params = {'start_date': '01/04/2010', 'end_date': '01/02/2010'}
+        response = self._get(get_kwargs=params, follow=True)  # reversed
+        correct_url = '{0}?{1}'.format(reverse('nutrition_reports'),
+                urlencode(params))
+        self.assertRedirects(response, correct_url)
+        queryset = response.context['table'].data.queryset
+        form = response.context['form']
+        self.assertEquals(queryset.count(), 0)
+        self.assertTrue(form.non_field_errors())
+

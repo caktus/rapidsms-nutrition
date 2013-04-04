@@ -27,12 +27,15 @@ class Report(models.Model):
 
     # Meta data.
     raw_text = models.CharField(max_length=255, null=True, blank=True)
-    created = models.DateTimeField(auto_now_add=True,
-            verbose_name='report date')
+
+    created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=1, blank=True, null=True,
             choices=STATUSES, default=UNANALYZED)
     active = models.BooleanField(default=True)
+
+    # In theory, reports could be for a different day than is reported.
+    data_date = models.DateField('Date', default=datetime.date.today)
 
     # Local identifiers, unique to the nutrition healthcare sources defined in
     # the project settings.
@@ -46,21 +49,21 @@ class Report(models.Model):
     global_patient_id = models.CharField(max_length=255)
 
     # Indicators, gathered from the reporter.
-    height = models.DecimalField(max_digits=4, decimal_places=1, blank=True,
-            null=True, verbose_name='Height (CM)')
-    weight = models.DecimalField(max_digits=4, decimal_places=1, blank=True,
-            null=True, verbose_name='Weight (KG)')
-    muac = models.DecimalField(max_digits=4, decimal_places=1, blank=True,
-            null=True, verbose_name='MUAC (CM)')
+    height = models.DecimalField('Height (CM)', max_digits=4, decimal_places=1,
+            blank=True, null=True)
+    weight = models.DecimalField('Weight (KG)', max_digits=4, decimal_places=1,
+            blank=True, null=True)
+    muac = models.DecimalField('MUAC (CM)', max_digits=4, decimal_places=1,
+            blank=True, null=True)
     oedema = models.NullBooleanField(default=None)
 
     # Nutrition z-scores, calcuated from indicators.
-    weight4age = models.DecimalField(max_digits=4, decimal_places=2,
-            blank=True, null=True, verbose_name='Weight for Age')
-    height4age = models.DecimalField(max_digits=4, decimal_places=2,
-            blank=True, null=True, verbose_name='Height for Age')
-    weight4height = models.DecimalField(max_digits=4, decimal_places=2,
-            blank=True, null=True, verbose_name='Weight for Height')
+    weight4age = models.DecimalField('Weight for Age', max_digits=4,
+            decimal_places=2, blank=True, null=True)
+    height4age = models.DecimalField('Height for Age', max_digits=4,
+            decimal_places=2, blank=True, null=True)
+    weight4height = models.DecimalField('Weight for Height', max_digits=4,
+            decimal_places=2, blank=True, null=True)
 
     class Meta:
         permissions = (
