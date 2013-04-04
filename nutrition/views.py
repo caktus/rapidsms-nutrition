@@ -10,22 +10,19 @@ from django.utils.decorators import method_decorator
 from django.views.generic import View
 from django.views.generic.base import TemplateView
 
+from django_tables2 import RequestConfig
+
 from nutrition.forms import ReportFilterForm
-from nutrition.models import Report
 from nutrition.tables import NutritionReportTable, CSVNutritionReportTable
 
 
 class NutritionReportMixin(object):
     """Allow filtering by patient, reporter, and status."""
-    ordering = ['-created']  # Default order in which to display reports.
 
     @method_decorator(permission_required('nutrition.view_report'))
     def dispatch(self, request, *args, **kwargs):
         self.form = ReportFilterForm(request.GET)
-        if self.form.is_valid():
-            self.items = self.form.get_items(ordering=self.ordering)
-        else:
-            self.items = Report.objects.none()
+        self.items = self.form.get_items()
         return super(NutritionReportMixin, self).dispatch(request, *args,
                 **kwargs)
 
@@ -39,12 +36,9 @@ class NutritionReportList(NutritionReportMixin, TemplateView):
     def get_table(self):
         table = NutritionReportTable(self.items,
                 template=self.table_template_name)
-        table.paginate(page=self.page, per_page=self.items_per_page)
+        paginate = {'per_page': self.items_per_page}
+        RequestConfig(self.request, paginate=paginate).configure(table)
         return table
-
-    @property
-    def page(self):
-        return self.request.GET.get('page', 1)
 
     def get_context_data(self, *args, **kwargs):
         return {
@@ -58,7 +52,9 @@ class CSVNutritionReportList(NutritionReportMixin, View):
     filename = 'nutrition_reports'
 
     def get_table(self):
-        return CSVNutritionReportTable(self.items)
+        table = CSVNutritionReportTable(self.items)
+        RequestConfig(self.request).configure(table)
+        return table
 
     def get(self, request, *args, **kwargs):
         # Redirect to the plain reports list if form is invalid.

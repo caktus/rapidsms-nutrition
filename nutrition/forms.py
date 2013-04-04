@@ -192,9 +192,8 @@ class ReportFilterForm(forms.Form):
                 filters['status'] = self.cleaned_data['status']
             return filters
 
-    def get_items(self, ordering=None):
+    def get_items(self):
         filters = self._get_filters()
         if filters is not None:
-            if ordering is not None:
-                return Report.objects.filter(**filters).order_by(*ordering)
             return Report.objects.filter(**filters)
+        return Report.objects.none()
